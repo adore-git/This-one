@@ -1,0 +1,180 @@
+[例] 一个女孩要表白
+
+先定义这个女孩的接口跟类
+
+// 接口，包含一个表白(sayLove)的方法
+public interface Person {
+    void sayLove();
+}
+
+
+// 具体类，一个要去表白的女孩儿
+public class Girl implements Person {
+    @Override
+    public void sayLove() {
+        System.out.println("我爱你.");
+    }
+}
+如果不通过代理的方式，那么表白的代码如下：
+
+main () {
+    Girl z = new Girl();
+    z.sayLove();
+}
+但是在某些情况下，直接表白是不合适的，所以需要有人出面玉成此事。 这个时候，需要代理。代理出面，代替女孩儿求爱。
+
+分为静态代理和动态代理。
+
+静态代理
+
+实现方式有两种：继承、聚合
+
+首先，继承的方式：
+
+// 这就是要帮忙出面的代理，它需要有 sayLove() 方法
+public class LoveProxy extends Girl {
+    @Override
+    public void sayLove() {
+        super.sayLove();
+        System.out.println("祝你们能白头偕老.");
+    }
+}
+
+
+// 执行
+main() {
+    LoveProxy m = new LoveProxy();
+    // 让代理帮助表白
+    m.sayLove();
+}
+其次，聚合的方式。很重要的方式。这种方式必须要有接口。
+
+// 需要实现 Girl 相同的接口，我们的代理必须要有 sayLove() 方法
+public class LoveProxy implements Person {
+    Girl z = null;
+    public LoveProxy(Girl g) {
+        this.z = g;
+    }
+
+    @Override
+    public void sayLove() {
+        z.sayLove();
+        System.out.println("我们在一起吧。");
+    }
+}
+
+
+main() {
+    LoveProxy m = new LoveProxy(new Girl());
+    m.sayLove();
+}
+JDK 动态代理
+
+JDK 的动态代理，必须依赖接口实现
+
+首先，要创建一个代理的 生成器 ，用来为某个类生成代理。
+
+public class JDKLoveProxyGenerator implements InvocationHandler {
+
+    Object z = null;
+
+    public JDKLoveProxyGenerator(Object g) {
+        this.z = g;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 用反射的方式，调用 z 里的原方法
+        Object result = method.invoke(z, args);
+        System.out.println("你们真的能够在一起。");
+        return result;
+    }
+}
+利用上边的代理生成器，生成一个帮助我们做事的代理。
+
+main() {
+
+    // 通过代理生成器，为 Girl 创建一个代理
+    // 注意，生成的代理类是 Person 接口的一个实现
+    Person loveProxy = (Person) Proxy
+        .newProxyInstance(Girl.class.getClassLoader(),
+                          Girl.class.getInterfaces(),
+                          new JDKLoveProxyGenerator(new Girl()));
+    // 让代理帮助做某些事
+    loveProxy.sayLove();
+
+
+    System.out.println("--------------------");
+
+
+    // 一个动态代理生成器，可以为多个不同的接口生成代理
+    // 下面为 Dog 生成一个代理
+    Animal animalLoveProxy = (Animal) Proxy
+        .newProxyInstance(Dog.class.getClassLoader(),
+                          Dog.class.getInterfaces(),
+                          new JDKLoveProxy(new Dog()));
+    animalLoveProxy.sayLove();
+}
+CGLib 动态代理
+
+CGLib 动态代理使用的是直接修改 Class 字节码的方式实现，它并不需要接口。
+
+如果使用 CGLib 的动态代理，首先，要在工程中加入 cglib 的 jar 包支持：
+
+compile "cglib:cglib:3.2.4"
+其次，使用 CGLib 实现我们的 代理生成器 ，只要实现 MethodInterceptor 接口即可：
+
+public class CGLibLoveProxyGenerator implements MethodInterceptor {
+    @Override
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
+
+        Object result = null;
+
+        System.out.println("这个位置是 @Before 通知");
+
+        try {
+            // 调用原方法
+            result = proxy.invokeSuper(obj, args);
+            System.out.println("这个位置是 @AfterReturning 通知，这里可以引用到原函数的返回值");
+            return result;
+        }
+        catch (Throwable e) {
+            System.out.println("这个位置是 @AtferThrowing 通知，这里可以引用到异常变量");
+        } finally {
+            System.out.println("我是一个 @After 通知");
+        }
+    }
+}
+然后，就可以用上面的 CGLibLoveProxyGenerator 为某个类生成代理了：
+
+main() {
+
+    /**
+     * 这是一个使用 JDK 动态代理的例子。
+     */
+    Person loveProxy = (Person) Proxy
+        .newProxyInstance(Girl.class.getClassLoader(),             // classLoader
+                          Girl.class.getInterfaces(),              // 接口
+                          new JDKLoveProxyGenerator(new Girl())    // 代理生成器
+                          );                    // 注意，生成的代理的类型是 Person
+
+    loveProxy.sayLove();
+
+
+      
+    /**
+     * 这是一个使用 CGLib 动态代理的例子。
+     * 跟上面用 JDK 代理方式比较，发现它们其实是一致的。
+     */
+    Enhancer enhancer = new Enhancer();
+    enhancer.setClassLoader(Dog.class.getClassLoader()); // classLoader
+    enhancer.setSuperclass(Dog.class);                   // 父类
+    enhancer.setCallback(new CGLibLoveProxyGenerator()); // 代理生成器
+
+    Dog dogProxy = (Dog) enhancer.create();    // 注意，生成的代理的类型是 Dog
+
+    // 其实，上面创建 dogProxy 的代码可以简写为:
+    // Dog dogProxy = (Dog) Enhancer.create(Dog.class, null, new CGLibLoveProxyGenerator());
+
+    dogProxy.sayLove();
+}
