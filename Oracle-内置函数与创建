@@ -125,3 +125,56 @@ count（* | 1）
 row_number
 秩
 密集的
+
+
+创建函数
+
+语法：
+
+CREATE [ 或 REPLACE] FUNCTION function_name [（参数参数类型：=默认值[，其他参数]）]返回参数类型
+ AS | IS
+  定义的变量
+开始
+  逻辑
+  返回xxx
+结束;
+示例：
+
+-随机抽取1-n之间的一个整数
+创建或替换 函数 hehe（n number： =  10）return number
+是的
+  小号数字 ;
+开始 
+  小号= ROUND（DBMS_RANDOM。值（0。5，N +  0。5））;
+  return s;
+结束hehe;
+/
+
+
+-你要还要多久毕业？示例。
+创建或替换 函数 howsoon（d date： = to_date（ ' 20170101 '， ' yyyymmdd '））return number
+是的
+开始 
+  返回to_number（d -  sysdate）;
+结束;
+/
+
+
+-函数的参数可以带三种类型，in / out / in out 
+-如果参数没有注明in或out等，那么默认就在类型
+-在类型的参数，是传入值，所以，必须在传入的时候，赋予一个具体的值。
+- 。出类型的参数，是传出值，所以，在传入的时候，不必赋值，但是，在函数体内，必须要给与一个值
+创建或替换 函数 mtimes（a number，res out number）return number 
+as 
+begin 
+  res： = a * a * a;  -必须要有这样的赋值操作，才能使res得到一个值，这样才有意义。
+  return a;  
+结束;
+
+-上述函数的调用方式
+宣布
+  ABC 号码 ;
+开始
+  dbms_output。put_line（“我们传入的参数是：”  || mtimes（82，abc））;
+  DBMS_OUTPUT。put_line（'它的的三次方是：'  || abc）;
+结束;
