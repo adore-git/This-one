@@ -1,0 +1,195 @@
+建议在下面两种情况下要对表进行分区：
+
+表的数据量超过2G
+表里面存在大量的历史数据
+表分区是为了了达到分而治之的目的，是鸡蛋不能放在同一个篮子里的切实实践。首先能提高效率，再者可保障安全。
+
+甲骨文里的基本分区有：
+
+范围分区（范围）
+列表分区
+哈希分区（哈希）
+另外可以对表的分区进行复合，建立子分区。Oracle 11之后添加了很多不同的复合形式，但常用的有两种：
+
+范围 - 哈希分区
+范围 - 列表分区
+- 。查看当前用户下表的分区详情
+选择表名，的partition_name从 USER_TAB_PARTITIONS;
+选择表名，的partition_name，subpartition_name从 USER_TAB_SUBPARTITIONS;
+
+-从分区中查询数据
+select  *  from table_name partition（partition_name）;
+
+-复合分区中进行查询数据
+select  *  from cxbe3子分区（p1_ps4）;   -表示p1分区下的ps4子分区
+范围分区
+
+-基本创建
+create  table  bea1（name varchar2（ 20），birth date，yz number）;   -表的创建语句，不带分区的情况
+create  table  bea2（name varchar2（ 20），birth date，yz number）     -按照生日，范围分区。
+按范围划分（出生）
+（
+  分区p1 值小于（to_date（' 19900101 '，' yyyymmdd '）），
+  分区p2 值小于（to_date（' 20000101 '，' yyyymmdd '））
+）;
+-测试bea2 
+插入到 bea2值（ ' xxx '，to_date（ ' 19880102 '）， 87）;   -会被插入到p1分区
+插入 bea2值（ ' yyy '，to_date（ ' 19920102 '）， 82）;   -会被插入到p2分区
+插入 bea2值（ ' zzz '，to_date（ ' 20010102 '）， 89）;   -会出现错误，ORA-14400：插入的分区关键字未映射到任何分区。因为没有这条数据创建相应分区
+select  *  from bea2;                   -两条数据，xxx和yyy 
+select  *  from bea2 partition（p1）;    -显示的是xxx的数据。这是从
+特定 分区中查询数据的语法select *  from bea2 partition（p2）;    -显示的是yyy的数据
+
+- maxvalue的使用
+create  table  bea3（name varchar2（ 20），birth date，yz number）     -按照生日，范围分区。
+按范围划分（出生）
+（
+  分区p1 值小于（to_date（' 19900101 '，' yyyymmdd '）），
+  分区p2 值小于（to_date（' 20000101 '，' yyyymmdd '）），
+  分区p3 值小于（MAXVALUE）;
+）;
+插入 bea3 值（' zzz '，to_date（' 20010102 '），89）;   -插入的是有maxvalue关键字的p3分区
+select  *  from bea3 partition（p3）;                          -可以查询到。
+
+-分区的关键字，可以是数值，可以是日期，也可以是字符串
+创建 表 bea5（名称 varchar2（ 20），出生日期，yz数）
+按范围划分（名称）
+（
+  分区p1 值小于（' i '），
+  分区p2 值小于（' x '），
+  分区p3 值小于（MAXVALUE）
+）;
+
+-在创建每个分区的时候，为每个分区指定表空间
+create  table  bea6（name varchar2（ 20），birth date，yz number）
+按范围划分（yz）
+（
+  分区p1 值小于（60），
+  分区p2 值小于（85）的表空间用户，
+  分区p3 值小于（MAXVALUE）表空间系统
+）;
+
+-可以按照多个字段进行分区
+创建 表 bea7（name varchar2（ 20），出生日期，yz数）
+按范围划分（名称，yz）
+（
+  分区p1 值小于（' j '，60），
+  分区p2 值小于（' z '，90），
+  分区p3 值小于（MAXVALUE，MAXVALUE）
+）;
+
+列表分区
+
+-不要忘记指定默认分区
+创建 表 beaa（name varchar2（ 20），sex varchar2（ 20），yz number）
+按列表划分（性别）
+（
+	分区p1 值（'男'），
+	分区p2 值（'女'），
+	分区p3 值（DEFAULT）
+）;
+
+-指定相应的存储表空间
+create  table  beaa（name varchar2（ 20），sex varchar2（ 20），yz number）
+按列表划分（性别）
+（
+	分区p1 值（'男'）表空间用户，
+	分区p2 值（'女'）表空间系统，
+	分区p3 值（DEFAULT）
+）;
+哈希分区
+
+哈希算法，散列也是〜
+
+创建 表 beax（name varchar2（20），yz number）
+哈希分区（名称）
+（
+  分区p1表空间用户，
+  分区p2，
+  分区p3，
+  分区p4，
+  分区p5
+）;
+
+- 。创建多个分区的简略写法分区的名字由甲骨文自动维护
+创建 表 beax（名 VARCHAR2（ 20），YZ号）
+哈希分区（名称）
+分区5 ;
+
+-指定表空间
+create  table  beax（name varchar2（ 20），yz number）
+哈希分区（名称）
+分区5个存储在（用户，系统，用户，系统，系统）;
+
+范围 - 列表分区
+
+-先按照生日分区，之后子分区是按照名字哈希分区
+创建 表 cxbe1（name varchar2（ 20），出生日期，yz号）
+按范围划分（出生）
+哈希（名称）子分区
+子部分3
+（
+  分区p1 值小于（to_date（' 19900101 '，' yyyymmdd '）），
+  分区p2 值小于（to_date（' 20000101 '，' yyyymmdd '）），
+  分区p3 值小于（maxvalue）
+）;
+
+-先按颜色值分区，之后子分区是按照生日哈希分区
+创建 表 cxbe2（名称 varchar2（ 20），出生日期，yz数）
+按范围划分（yz）
+通过哈希（出生）
+子部分3
+（
+  分区p1 值小于（50），
+  分区p2 值小于（80），
+  分区p3 值小于（MAXVALUE）
+）;
+
+范围 - 列表分区
+
+-先按颜颜值范围分区，在每个分区内再进行哈希分区
+create  table  cxbe3（name varchar2（ 20），sex varchar2（ 20），yz number）
+按范围划分（yz）
+按分类分类（性别）
+子分区模板
+（
+  subpartition ps1 值（'男'）表空间用户，
+  subPartition ps2 值（'女'）表空间用户，
+  子分区ps2 值（DEFAULT）
+）
+（
+  分区p1 值小于（60），
+  分区p2 值小于（80），
+  分区p3 值小于（MAXVALUE）
+）;
+
+分区的修改
+
+-添加分区
+alter  table bea2添加分区 p9值小于（MAXVALUE）;
+改变 表 BEA2添加分区P9的值（ 1， 2）;   -针对列表分区
+alter  table bea2 add partition;                    -针对哈希分区
+
+-删除分区内数据
+alter  table bea2 truncate partition p3;
+
+-删除分区
+alter  table bea2 drop partition p3;
+
+-合并
+相邻分区alter  table bea2将分区p2，p3合并到分区p8中;
+
+-拆分分区
+alter  table bea2 split partition p2 at（ 3000）into（partition p3，partition p14）;     -范围分区的拆分
+改变 表 BEA2分割分区P2的值（ 1， 2）代入（分区P3，P4的分区）;   -列表分区的拆分
+改变 表 BEA2分割分区P2到（分区P3的值（ 1， 2），分区P4的值（ 3），隔板P5）;   -列表分区的拆分
+
+-重命名分区
+alter  table bea2重命名分区 p2至p12;
+如果分区字段的数据被更新，发生了跨分区的情况，会发生什么？
+
+错误：更新分区关键字列将导致分区的更改
+可以通过以下语法，使行数据可以移动
+
+alter table m8启用行移动;
+通过这种方式，实现了行数据的迁移。但是数据的rowid也会随之发生变化。
