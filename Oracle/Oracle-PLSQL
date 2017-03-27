@@ -1,0 +1,477 @@
+全称为过程语言/结构化查询语言。
+
+它是Oracle开发的，结合过程与结构化查询语言的一种程序语言。所以它充分利用了SQL语言的优势，又添加了过程化的功能。在解决实际问题的过程中，非常强大，实用。
+
+基本语法
+
+-简单来说，结构
+[宣布]
+...
+开始
+...
+[例外]
+...
+结束;
+
+-一个完整点的栗子
+宣布
+  -变量定义区，在这里定义所有要使用的变量（或常量）
+  -这一部分是可选的 
+  id号 ;
+  标志恒定数：=  1 ;      - CONSTANT关键字定义的是常量，后面不能被修改 
+  名称varchar2（20）：=  ' hello ' ;   -可以在定义的时候，赋予初始值 
+  sal emp。sal％TYPE;               -定义变量的类型可以用％TYPE /％ROWTYPE获取
+
+BEGIN 
+  -代码区，过程块的主体
+  -里面包含DDL / DML等SQL语句，也包含一些面向过程的控制语句。
+
+  - 
+  判断语句 if flag =  1 then
+     -这句相当于java中的System.out.println（string）; 
+    DBMS_OUTPUT。put_line（ '号码：'  || flag）;
+  万一;
+
+
+  -选择进入语句获取记录，并将变量赋值
+  从 emp中选择 max（empno）into id;
+
+
+  -循环语句 
+  for i in  1 .. 10 loop
+     - insert into returns，完成插入操作，并把本行相关的信息赋值给变量
+    insert into emp（empno，ename，sal） values（id + i， dbms_random。字符串（ ' u '， 5），i * 100）
+      ;;;;;;;;;;
+
+    DBMS_OUTPUT。put_line（'员工'  || name ||  '的工资为：'  || sal）;
+    提交 ;
+
+  端环;
+
+
+例外
+  -这里是异常处理区，处理捕获到的异常
+  -这部分也是可选的
+  何时no_data_found？
+    DBMS_OUTPUT。put_line（'没有查询到任何的数据'）;
+  其他人呢
+    DBMS_OUTPUT。put_line（'未知错误：'  || sqlerrm）;
+
+结束;
+/
+
+
+
+- pl / sql版本的hello，world 
+-一个pl / sql块，至少要包含begin和end; 
+-需要把serveroutput选项设为on，才能看到打印的结果
+begin 
+  dbms_output。put_line（ ' hello，world '）;
+结束;
+
+
+-再复杂一点，增加变量，需要用到声明段
+宣布
+  str varchar2（20）;
+开始 
+  str：=  '你好，世界' ;
+  DBMS_OUTPUT。put_line（str）;
+结束;
+
+
+-再复杂一点，增加异常处理，需要用到异常段
+宣布
+  Ñ 号码 ;
+开始 
+  N：=  10 / 0 ;
+例外
+  当别人的时候
+    DBMS_OUTPUT。put_line（'有错误发生'）;
+结束;
+
+
+-再复杂一点，把错误的信息保存到指定表中
+宣布
+  Ñ 号码 ;
+  emsg varchar2（20）;
+开始 
+  N：=  10 / 0 ;
+例外
+  当别人的时候
+    DBMS_OUTPUT。put_line（'有错误发生'）;
+    emsg：= sqlerrm;   - sqlerrm函数可以获取异常的描述信息
+    插入日志值（emsg）;
+    提交 ;
+结束;
+变量赋值
+
+-最基本的赋值运算符是： 
+a： =  666 ;
+
+
+-在开始之后，如果选择语句不带入关键词的话，会报错
+-通过select x into y从这样的句式，可以把查询到的结果赋值给相应变量。
+宣布
+  一个EMP。ename％type;
+开始
+  选择的ename成从 EMP 那里 ROWNUM <  2 ;
+  DBMS_OUTPUT。put_line（' print result：'  || a）;
+结束;
+/
+
+-如果有多个变量，那么，依次用逗号隔开
+宣布
+  一个EMP。ename％type;
+  b EMP。sal％型;
+开始
+  选择 ename，sal into a，b 从 emp where rownum <  2 ;
+  DBMS_OUTPUT。put_line（' print result：'  || a ||  '   的工资是：'  || b ||  '美元'）;
+结束;
+/ 
+-结果：SMITH的工资是：800美元
+
+
+
+-在增加改的过程中，DML语句之后通过加入返回到语句，
+-也可以实现跟选择进入类似的变量赋值。
+宣布
+  一个号码 ;
+开始
+  更新 EMP 集通讯= 800  ，其中为ename = ' KING ' 
+    返回SAL + COMM成;
+  DBMS_OUTPUT。put_line（'王现在的工资是：'  || a）;
+结束;
+/
+
+
+
+-在游标的使用中，通过fetch into赋值
+宣布
+  光标a是从 emp 中选择 ename ;
+  b varchar2（20）;
+开始
+  打开
+  取b   -通过fetch into把结果赋予a; 
+  DBMS_OUTPUT。put_line（b）;
+  关闭
+结束;
+/
+变量类型
+
+标量类型（Scalar）
+
+基本等同于sql中的数据类型，比如varchar2，number，date，blob，raw等，还包括布尔类型。
+
+-这是最常用的数值类型的定义
+宣布
+  一个号码 ;
+  b 号（20）;
+  c int：=  222 ;
+  d 整数 ;
+  浮动
+开始 
+  d：=  222 ;
+  DBMS_OUTPUT。put_line（d）;
+结束;
+/
+
+-其他常用类型
+宣布
+  一个VARCHAR2（20）;
+  b char（20）;
+  ;
+  ð 日期 ;
+开始 
+  ：=  ' hello ' ;
+  b：=  ' world ' ;
+  d：=  sysdate ;
+
+  DBMS_OUTPUT。put_line（a || b || to_char（d，' yyyy / mm / dd '））;
+
+结束;
+/
+
+
+
+-对于lob类型，可以通过Oracle提供的dbms_lob包进行操作
+-下面是一个栗子，一篇文章
+-一篇文章可能有以下字段：主键，作者，题目，内容，创作日期，点赞数等等，分别使用了不同的变量类型
+-因为文章正文的内容可能很长，会超过varchar2类型4000字节的限制，所以最好使用的是clob类型
+-首创创建表，如下：
+create  table  文章 
+（
+  ID 号码 主键，
+  作者varchar2（20）not null，
+  title varchar2（20）not null，
+  内容clob 不为空，
+  create_date timestamp default sysdate，
+  评分数
+）;
+
+-为插入数据创建一个序列。默认从1开始，步长为1 
+创建 序列 seq_article ;
+-插入一条数据
+插入到物品值（ seq_article。 NEXTVAL， '韩寒'， '穿着棉袄洗澡'， '我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄，我们有很多棉袄'，SYSTIMESTAMP， 0） ;
+- 。插入一条内容为空的文章用EMPTY_CLOB（）函数初始化CLOB字段
+插入到物品值（ seq_article。 NEXTVAL， '
+
+-写一个栗子，打印文章的作者，创作日期，标题，内容简介（前20个字）。
+宣布
+  量数目默认20 ;
+  v_author varchar2（20）;
+  v_date varchar2（40）;
+  v_title varchar2（40）;
+  v_content clob
+  v_desc varchar2（400）;
+开始
+  -查询，赋值
+  选择作者，to_char（create_date，' yyyy.mm.dd hh：mi：ss '），title，content into v_author，v_date，v_title，v_content from article where rownum <  2 ;
+  - 。获取前20个字符的语法函数读取的参数分别为BLOB字段，要读取的长度，开始的位置，读取的结果。
+  DBMS_LOB。read（v_content，amount，1，v_desc）;
+  DBMS_OUTPUT。put_line（v_author ||  '（'  || v_date ||  ' ）'）;
+  DBMS_OUTPUT。put_line（'标题：'  || v_title）;
+  DBMS_OUTPUT。put_line（v_desc ||  ' ... '）;
+结束;
+/ 
+-结果显示：
+-韩寒（2016.09.29 05:00:56）
+-标题：穿着棉拼洗澡
+-我们有很多棉，我们有很多棉，我们有很多
+
+TYPE / ROWTYPE
+
+这是用来引用数据库中表的某一行，或某个字段的类型。
+
+-％type是用来快速获取表中某个字段具体类型的一种方式
+-通过利用这种方式，可以简化我们的定义。
+宣布
+  一个EMP。ename％type;   -相当于varchar2（xx） 
+  b emp。sal％型;     -相当于b数（7,2）
+begin 
+  select ename，sal into a，b from emp where rownum <  2 ;
+  DBMS_OUTPUT。put_line（'员工的名字是：'  || a ||  '，他的工资是：'  || b ||  '美元'）;
+结束;
+
+-％rowtype是一种获取行记录的方式，它包含了一行记录所有的字段
+-所以我们可以用js中数组的角度去比较之。
+宣布
+  v_emp emp％rowtype;
+开始
+  select  *到v_emp 从 emp 其中 rownum <  2 ;
+  DBMS_OUTPUT。PUT_LINE（'结果是：'  ||  v_emp。ENAME  ||  '的工资是'  ||  v_emp。SAL  ||  '英镑，部门编号是：'  ||  v_emp。deptno2）;
+
+结束;
+/
+
+自定义记录/数组类型
+
+-可以在基本类型的基础上，构造出许多的复杂的类型，比如数组
+-记录类型，使用名称来获取里面的值
+- Oracle中，定义新类型的语句为类型。比如，定义一个记录数组，语句如下：
+TYPE type_name IS RECORD（第一个元素的名字第一个元素的基本类型，第二个...，第三个）;
+-类型定义完毕之后，就可以像普通的类型那样去使用了。如果，我们可以这样创建一个上述类型的变量
+v_name type_name;
+
+-下面是一个具体点的例子
+宣布
+  类型t_emp是record（ename varchar2（20），sal number）;
+  v_emp t_emp;     -定义一个t_emp类型的变量。定义完变变之后，我们才可以使用 
+  v_emp2 t_emp;    -这是定义的第二个t_emp类型的变量。
+开始
+  选择 ename，sal进入v_emp 从 emp where rownum <  2 ;
+  DBMS_OUTPUT。PUT_LINE（'结果是：'  ||  v_emp。ENAME  ||  '的工资是'  ||  v_emp。SAL  ||  '英镑'）;
+结束;
+/
+
+-查询KING的工资和部门。利用了记录类型。
+宣布
+  类型t_emp是record（ename varchar2（20），sal number，dname varchar2（20））;
+  v_emp t_emp;
+
+  从 emp 加入scott 开始选择 ename，sal，dname到v_emp 。dept的上EMP。deptno = scott。dept .deptno 其中 sal > 1000 ;
+  DBMS_OUTPUT。PUT_LINE（'结果是：' || v_emp。ENAME || '的工资是' || v_emp。SAL || '英镑' || '部门是' || v_emp。           
+结束;
+
+
+
+-数组类型，用序号来获取里面的值。
+- varray关键字，需要指明长度，指明类型
+-类除了记录和varray外，还有很多其他类型，比如表，对象等有兴趣的同学自己找资料
+宣布
+  键入t_numarr是varray（4）的数字 ;
+  一个t_numarr
+开始 
+  一个：= t_numarr（1，22，333，4444）;
+  DBMS_OUTPUT。put_line（a（1））;
+  DBMS_OUTPUT。put_line（a（2））;
+  DBMS_OUTPUT。put_line（a（3））;
+  DBMS_OUTPUT。put_line（a（4））;
+结束;
+
+操作符
+
+详情看p227
+
+流程控制
+
+分支判断
+
+IF语句
+
+-最简语法为
+如果条件那么
+  要执行的代码
+万一;
+
+-复杂一点，需要用elsif和else添加更多的分支
+如果条件那么
+  要执行的代码
+ELSIF另外的条件
+  要执行的代码
+其他
+  要执行的代码
+万一;
+
+
+
+-例子1，这是一个稍微详细的例子
+宣布
+  一个号码 ;
+开始 
+  ：=  dbms_random。值（0，4）;
+  DBMS_OUTPUT。put_line（'你输入的是：'  || a）;
+  if（a <  1）then
+     dbms_output。put_line（“你输入的数字太小了”）;
+  elsif a <  2 then
+     dbms_output。put_line（'诶呀，刚刚好啊'）;
+  其他
+    DBMS_OUTPUT。put_line（'你输入的太大了'）;
+  万一;
+结束;
+/
+
+
+-如果使用，例子2
+宣布
+  一个号码 ;
+开始 
+  一个：= ROUND（DBMS_RANDOM。值（0。5，3。5））;  -取一个随机数，可能的值是1/2/3 
+  if a =  1 then
+     dbms_output。put_line（'你是男生，应该多干活'）;
+  elsif a =  2 then
+     dbms_output。put_line（'你是女生，应该多保养'）;
+  其他
+    DBMS_OUTPUT。put_line（“你先去验一下性别吧”）;
+  万一;
+
+结束;
+/
+案例语句
+
+CASE [字段]
+  WHEN条件THEN要执行的代码
+  [条件THEN要执行的代码]
+  [ELSE要执行的代码]
+结案
+
+
+-把上面if / else的例子1翻译过来就是：
+宣布
+  一个号码 ;
+开始 
+  ：=  dbms_random。值（0，4）;
+  DBMS_OUTPUT。put_line（a）;
+  案件
+    当一个<  1 then
+       dbms_output。put_line（“你输入的数字太小了”）;
+    当一个<  2 then
+       dbms_output。put_line（'诶呀，刚刚好啊'）;
+    其他 
+      DBMS_OUTPUT。put_line（'你输入的太大了'）;
+  最终案例
+结束;
+/
+
+-把上面如果里面例子2翻译过来是：
+宣布
+  一个号码 ;
+开始 
+  一个：= ROUND（DBMS_RANDOM。值（0。5，3。5））;
+  案例a
+    当1然后
+       DBMS_OUTPUT。put_line（'你是男生，应该多干活'）;
+    当时为2，然后是
+       dbms_output。put_line（'你是女生，应该多保养'）;
+    其他
+      DBMS_OUTPUT。put_line（“你先去验一下性别吧”）;
+  最终案例
+结束;
+/
+循环迭代
+
+循环
+
+-最简单的语法
+循环
+  循环的代码
+  -注意，在这样的循环语句中，要添加合适的中止语句。
+END LOOP;
+
+
+-这是循环的基本用法
+宣布
+  一个数字：=  10 ;
+开始
+  循环
+    a：= a -  1 ;
+    DBMS_OUTPUT。put_line（systimestamp）;
+    如果一个<  1 then   -需要根据条件判断，写相应的退出语句
+      出口;
+    万一;
+  端环;
+结束;
+/
+
+-退出语句可以如下简写，即退出时条件
+宣布
+  一个数字：=  10 ;
+开始
+  循环
+    a：= a -  1 ;
+    DBMS_OUTPUT。put_line（systimestamp）;
+    退出时<  1 ;
+  端环;
+结束;
+/
+对于
+
+-语法 
+FOR变量 IN最小值..最大值LOOP
+  执行的语句
+END LOOP;
+
+-下面是循环的进阶用法，要跟结合使用
+-这种方式很实用
+开始 
+  为我在 1 .. 10循环
+     dbms_output。put_line（systimestamp）;
+  端环;
+结束;
+而
+
+-语法
+WHILE条件LOOP
+  执行的语句
+END LOOP;
+
+
+
+-举例
+宣布
+  一个数字：=  10 ;
+开始 
+  同时>  0循环
+     DBMS_OUTPUT。put_line（systimestamp）;
+    a：= a -  1 ;
+  端环;
+结束;
