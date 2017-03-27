@@ -1,0 +1,21 @@
+配置途径
+
+直接修改NETWORK / ADMIN下的配置文件
+通过Oracle的Net Manager工具配置
+服务端（NETWORK / ADMIN / listener.ora）
+
+直接修改配置文件或通过图形界面配置。主要配置元素有：
+协议（TCP / IP）
+连接地址
+端口号（默认1521，一般不需要修改）
+开启TNSListener服务
+客户端（NETWORK / ADMIN / tnsnames.ora）
+
+直接修改配置文件或通过图形界面配置。主要配置元素有：
+协议（TCP / IP）
+连接地址（机器名或IP地址）
+端口号（默认1521，需要跟服务器端的一致）
+数据库的服务名（默认跟SID /数据库名等是一致的）
+配置完后，就可以通过类似如下语句连接：
+sqlplus scott / tiger @ DBALIAS
+    
