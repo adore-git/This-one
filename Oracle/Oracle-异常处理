@@ -1,0 +1,133 @@
+作为一个优秀的程序员，肯定要能写出健壮的代码，而健壮代码的首要考虑，就是处理好异常。
+
+Oracle运行过程中出现的错误，称之为Oracle异常。主要分为两种，一种是系统预定义异常（即内部异常），一种是用户自定义异常。
+
+异常要有一个名字，一个编号（sqlcode），一个描述（sqlerrm）。
+
+异常的基本捕获语句为：
+
+宣布
+  变量定义
+开始
+  代码运行
+例外
+  当异常名称或者别人时
+    出现异常后的处理代码
+结束;
+系统自定义的异常（预定义）
+
+这种异常无需定义，当出现的时候会自动抛出，我们只需要在异常中做好相应的捕获处理就可以了。可以使用sqlcode和sqlerrm分别返回异常的代码编号，以及异常的描述信息。
+
+-栗子中有两种异常，一种是字母为零的异常（ZERO_DIVIDE），另一种，是没有查询到数据的异常（NO_DATA_FOUND）
+-这两种都是Oracle已经自定义好的异常，我们可以直接使用。
+宣布
+  一个VARCHAR2（20）;
+  b 号 ;
+开始 
+  B：=  10000  /轮（DBMS_RANDOM。值（- 0。1，1。1））;       -随机数，0或者1，如果随机到0，则会抛出相应异常。
+  从 emp 中选择 ename into emp empno = 2222222222 ;  -如果查询不到记录，则会抛出无数据记录异常dbms_output。put_line（' ok，您查询成功了'）; 
+  
+例外
+  当NO_DATA_FOUND然后
+    DBMS_OUTPUT。put_line（' hehe，没数据，亲'）;
+  当时ZERO_DIVIDE
+    DBMS_OUTPUT。put_line（'字母不能为零哦，亲'）;
+  当时OTHERS
+    DBMS_OUTPUT。put_line（' hehe，you 're great '）;
+结束;
+/
+
+有的内部异常，只有编号跟描述，没有具体名字，那么，我们需要用PRAGMA EXCEPTION_INIT来给异常起一个名字。
+
+宣布
+  nested_delete异常;   -先自定义异常，名字为nested_delete 
+  PRAGMA EXCEPTION_INIT（nested_delete，- 2292）;  -因为“记录存在外键约束”这个系统异常只有编号，为-2292，没有名字我们通过这个语句给这个异常赋予名字nested_delete。
+开始
+  删除 从部门那里 DEPTNO =  10 ;           -这条记录存在外键约束，所以删除失败，抛出异常-2292。因为上面定义了-2292为nested_delete，所以这个异常可以用nested_delete来捕获。
+例外
+  当nested_delete然后
+    DBMS_OUTPUT。put_line（'错误代码：'  || sqlcode）;
+    DBMS_OUTPUT。put_line（'错误信息：'  || sqlerrm）;
+    DBMS_OUTPUT。put_line（' deptno被外键引用，所以删除失败'）;
+结束;
+/
+用户自定义的异常（UserDefined）
+
+手动抛出一个异常的语句如下，跟java中的throw语句类似。
+
+引发例外
+如果想抛出一个带详细信息的异常，可以用Oracle提供给我们的存储过程raise_application_error来简化操作。
+
+-自定义一个异常，需要在声明里面声明一个异常类型的变量
+-如果想手动抛出异常的话，需要用到【raise异常名字】这样的语法
+宣布
+   一个号码 ;
+   womendajiadeyichang例外  
+开始 
+   ：=  dbms_random。值（0，4）;
+   如果a >  2 then
+      dbms_output。put_line（“呵呵，真是太好了”）;
+   其他
+     举起womendajiadeyichang;
+   万一;
+例外
+   当时womendajiadeyichang
+     DBMS_OUTPUT。put_line（“我们大家的异常，我们大家的方案”）;
+   当别人的时候
+     DBMS_OUTPUT。put_line（“我也不知道该怎么办”）;
+结束;
+/
+
+
+-可以通过上面的PRAGMA语句赋予编号等
+-这个代码编号应该在-20000到-20999之内，这是Oracle预留给我们用户使用的编号
+宣布
+   一个号码 ;
+   womendajiadeyichang例外
+   pragma exception_init（womendajiadeyichang，- 20001）;
+开始 
+   ：=  dbms_random。值（0，4）;
+   如果a >  2 then
+      dbms_output。put_line（“呵呵，真是太好了”）;
+   其他
+     举起womendajiadeyichang;
+   万一;
+例外
+   当时womendajiadeyichang
+     DBMS_OUTPUT。put_line（“我们大家的异常，我们大家的方案”）;
+   当别人的时候
+     DBMS_OUTPUT。put_line（“我也不知道该怎么办”）;
+结束;
+/
+
+
+-当然，也可以使用raise_application_error（code，msg）这个过程直接抛出异常。非常简单
+宣布
+  res 号：=  0 ;
+开始 
+  为我在 1 .. 100循环
+    res：= res + i;
+    如果res >  1000那么
+      raise_application_error（- 20002，“当前的结果太大了!!!都超过1000了!!! ”）;
+    万一;
+  端环;
+结束;
+/
+
+-如果想为上面的异常起一个名字，还是pragma。
+宣布
+  res 号：=  0 ;
+  out_of_range异常;
+  pragma exception_init（out_of_range，- 20002）;
+开始 
+  为我在 1 .. 100循环
+    res：= res + i;
+    如果res >  1000那么
+      raise_application_error（- 20002，“当前的结果太大了!!!都超过1000了!!! ”）;
+    万一;
+  端环;
+例外
+  当out_of_range然后
+    DBMS_OUTPUT。put_line（' outOfRangeError '）;
+结束;
+/
