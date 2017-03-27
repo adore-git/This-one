@@ -1,0 +1,192 @@
+四种类型
+
+关系视图（Relational View）
+内嵌式图（Inline View）
+对象视图（Object View）
+物化视图
+
+关系视图:
+又称为虚表，不占物理空间，存储在数据字典中。它能简化命令，隐藏复杂度，解耦，增强安全性。
+
+-初始化要使用的表
+创建 表 emp  作为 select  *  from emp;                        -复制表
+alter  table emp add constraints pk_emp主键（empno）;   -添加主键
+创建 表 dept  作为 select  *  from dept;
+
+-创建语法 
+创建[或替换] [force | noforce]
+将view_name 视为 select  *  from table_name
+[只读]               -强迫视图只能查看，不能修改 
+[with check option]
+;
+
+-创建视图
+create  view  v_emp  as  select empno，ename，sal from emp where sal >  1000 ;
+
+创建 视图 v_emp01  作为
+选择 e。为ename，ê。SAL，ð。dname  from emp e，dept d where  e。DEPTNO  =  ð。DEPTNO ;
+
+
+-删除视图
+drop  view v_emp01;
+
+内嵌视图
+
+-查询的基本语句，从后面跟的是表或者视图
+选择所有要查询的列从要查询的表 /视图 where子句;
+
+-这是之前我们用过的一个查询，查询所有的数据
+-在这个查询中，我们在从之后用到了一个带括号的查询语句，这个查询语句就是内嵌视图
+select  *  从  
+  （选择 ROWNUM RN，EMPNO，ENAME，SAL从 斯科特。 EMP） 
+  其中 RN >  2 ;
+
+-内嵌视图，从逻辑上可以分解为：
+-第一步：
+创建 视图 linshigong001  为 select rownum rn，empno，ename，sal从 scott。恩 ;
+-第二步：
+select  *  from linshigong001 where rn >  2 ;
+-第三步：
+drop  view linshigong001;
+对象视图（可选）
+
+-创建对象
+CREATE OR REPLACE  TYPE  depttype  
+AS OBJECT
+（
+deptid 号，
+deptname varchar2（30），
+loc 数
+）;
+
+创建或替换 视图 v_dept OF depttype
+  WITH OBJECT OID（deptid） 
+ AS  
+  SELECT deptid，deptname，loc FROM emp;
+
+SELECT  *  FROM v_dept;
+从 v_dept t中选择 ref（t）;  - oid
+物化视图
+
+它是Oracle中保存了查询结果的对象。它把查询的数据保存为实实在在的数据，再次访问的时候，就不需要从基表中去查询，而直接从保存的数据里拿取。能大大提高效率，增强性能。我们可以用能力自动同步数据的临时表的概念来理解它所以它不是虚表，它占用存储空间。
+
+它们主要用来提高效率，所以用在查询消耗比较大的连接上。也可以将远程的数据缓存到本地，通过这种方式保障性能。
+
+这是一种以空间换时间的方法。
+
+创建物化视图要考虑一下几个方面：
+
+什么时候生成数据
+建立立即/延期 - 在创建无话视图的时候立刻创建，或者推迟到需要的时候手动创建
+    
+如果基表的数据发生变化，以一种什么样的策略保持同步
+刷新完成/快速/强制/永不 - 四种方式依次对应：全量刷新，即删除后重新生成/增量刷新/ oracle自动判断，如果能增量则增量否则全量/不同步数据
+    
+如果基表的数据发生变化，刷新的时机
+on commit / demand start with sysdate next sysdate + 1  - 分别为：基表有更新的话立刻同步/按照时间段，按需同步，按需同步要开始与下一个使用
+    
+告诉甲方，如果从基本中查询数据的时候，允许不允许参考使用物化视图里的结果（如果使用物化视图的话，实质上oracle要修改你查询的语句，所以才叫查询重写）
+启用/禁用查询重写
+    
+详细的栗子如下：
+
+-最基本的创建。这里用的是全量更新。全量更新会很笨重。
+创建物化视图mv_emp
+  立即建立
+  刷新完成
+  在需求开始SYSDATE未来SYSDATE  +  1
+  启用查询重写
+  作为
+  select  *  from emp;
+
+
+
+
+-但如果要用刷新方式，即增量更新方式，那么，需要在原来的表上创建物化视图日志表，以便让oracle知道需要同步某些东西。
+-创建语句为如下，后面需要与。语句指定按照ROWID还是主键作为每一行数据的身份证号码
+创建物化视图日志上与EMP主键 ;
+-之后创建增量刷新的物化视图
+创建物化视图mv_emp_fast
+  立即建立
+  刷新快
+  在需求开始SYSDATE未来SYSDATE  +  1 
+  与主键   -这里要跟物化视图日志指定的相对应。
+  启用查询重写
+  作为
+  select  *  from emp;
+
+
+
+-删除 
+下降物化视图日志上 EMP;
+放下物化视图mv_emp;
+索引（索引）
+
+创建语句
+
+CREATE INDEX索引名字ON表名（表的字段名）[TABLESPACE表空间名字];
+重建索引
+
+alter index ind_s rebuild;
+删除语句
+
+下降指数ind_s;
+索引的类型
+
+唯一索引
+在s（name）上创建唯一的索引ind_s;
+    
+组合索引
+在s（name，addr）上创建索引ind_s;
+    
+反向索引
+在s（name）反向创建索引ind_s_reverse;
+    
+函数索引
+-创建一个表
+create  table  ss（name varchar2（ 20），value number）;
+
+-插入几条数据
+插入 ss值（ ' abc '， 100）;
+插入 ss值（ ' hello '， 99）;
+插入 ss值（ ' ok '， 22）;
+插入 ss值（ ' miss '， 111）;
+插入 ss值（ ' admin '， 190）;
+
+
+-在名字字段上创建普通的索引
+创建 索引 ind_ss_normal  on ss（name）;
+
+-打开autotrace，查看执行计划。
+-结果，table_access_full，即全表扫描，
+也就是说，没有走索引set autotrace on ;
+选择 *  从 SS其中 SUBSTR（姓名， 1， 1） =  ' ħ ' ;
+
+-创建关于名字的函数索引
+创建 索引 ind_ss_substr  上 SS（SUBSTR（姓名， 1， 1））;
+
+-再次查看执行计划
+中选择 *  从 SS其中 SUBSTR（姓名， 1， 1） =  ' ħ ' ;
+-显示结果如下，即走了索引，走的是我们创建的函数索引。
+- | TABLE INDESS BY INDEX ROWID | SS | 
+- | INDEX RANGE SCAN | INDEX_SS_SUBSTR |
+
+    
+位图索引
+在s（sex）上创建位图索引ind_aaa;
+在s（状态）上创建位图索引ind_aaa;
+在s（mz）上创建位图索引ind_aaa;
+    
+注意，要合理使用索引。因为，不合理的索引，不仅不能带来效率的提升，反而会拖累系统。索引的更新同步，是比较消耗资源的。
+
+不要只凭主主观去看SQL语句到底有没有走索引，要学会看Oracle的Explain Plan（解释计划）主要有两种方式：
+
+在sqlplus之下，打开autotrace选项：
+设置自动跟踪
+    
+这样，每条语句执行之后就会打印出相关的执行计划情况。其中，Table_Access_Full表示全表扫描，xxx_by_index_rowid表示扫描引索。
+
+手动生成解释计划，在sqlplus下的语法为：
+解释选择 CLAUSE的计划;   -通过生成计划的解释计划
+select  *  from plan_table;         - PLAN_TABLE保存的是上述解释计划的结果
+选择 *  从表（DBMS_XPLAN。显示）;  -是对上面表里面数据的更直观显示
