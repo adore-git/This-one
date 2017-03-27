@@ -1,0 +1,127 @@
+数值函数
+
+abs求绝对值
+从双重选择abs（-22）;
+    
+圆四舍五入
+SELECT ROUND（123415.193）“Round”FROM DUAL;
+SELECT ROUND（123415.193,2）“Round”FROM DUAL;
+SELECT ROUND（123415.193，-1）“Round”FROM DUAL;
+    
+权力求
+sqrt开根号
+trunc保留小数有效数字
+字符函数
+
+低转化为小写
+上转换为大写
+修剪去除某些字符
+从double选择trim（'x'from'xsxdfsxxxx'）
+选择修剪（两个'x'从'xsxdfsxxxx'）从双;  - 去除开始的x字符
+从双重选择修剪（从'xsxdfsxxxx'引导'x'）;  - 去除开始的x字符
+从双重选择修剪（从'xsxdfsxxxx'拖尾'x'）;  - 去除结尾的x字符
+    
+ltrim / rtrim左右去除字符
+SELECT RTRIM（'BROWNING：./=./=./=./=./=.='，'/ =。）FROM DUAL;  - 第二个参数包含了要砍掉的所有字符的集合
+SELECT RTRIM（'BROWNING：./=./=./=./=./=.='）FROM DUAL;  - 如果第二个参数为空，那么默认trim掉的是空格
+    
+lpad / rpad填充字符
+SELECT LPAD（'第1页，15，'*。））“LPAD示例”FROM DUAL;  - 第二个参数代表了返回值的总长度，最后一个参数如果去掉的话，那么默认填充的是空格
+    
+concate（||）连接字符
+REGEXP_REPLACE正则替换
+替换常规替换
+SELECT REPLACE（'JACK and JUE'，'J'，'BL'）“更改”FROM DUAL;  - 一共3个参数，第一个是源字符串，第二个是要替换的字符串，第三个是要替换为的字符串。
+SELECT REPLACE（'JACK and JUE'，'J'）“更改”FROM DUAL;  - 如果第三个参数为空的话，默认把第二个字符串替换为空。
+    
+SUBSTR
+SELECT SUBSTR（'ABCDEFG'，3,4）“Substring”FROM DUAL;  - 第一个参数表示要处理的源字符串，第二个参数表示子串起始的位置，第三个参数是可选的，表示子串的长度
+SELECT SUBSTR（'ABCDEFG'，3）“Substring”FROM DUAL;  - 如果不适用第三个参数，那么子串默认到源字符串的结尾。
+SELECT SUBSTR（'ABCDEFG'， -  2,1）“Substring”FROM DUAL;  - 如果第二个参数是负数，表示从结尾往回回溯。
+    
+TRANSLATE替换相应的字符
+从双重选择翻译（'hehehello，哈哈'，'o，h'，'0！'） - 三个参数，第一个源字符串，第二个和第三个参数里面的字符是按顺序一一对应的。这个函数就是按照后面两个参数内的字符，进行顺序替换。
+    
+ASCII显示字符ascii码
+从双重选择ascii（'A'） - 结果是65
+select * from scott.emp e其中ascii（substr（e.ename，1,1））= 67;  - 显示emp中所有名字以C开头的员工。
+    
+LENGTH / LENGTHB表示长度。
+时间函数
+
+sysdate / systimestamp systimestamp显示的时间时区是从操作系统中获取的。的返回值是TIMESTAMP WITH TIME ZONE类型。
+current_date / current_timestamp返回的是当前会话时区的时间。跟sessiontimezone有关系的。可以通过alter session set time_zone =' - 5：0'来修改会话的时区。
+localtimestamp显示当前时间，但是不带时区信息
+add_months增加日期
+从double选择add_months（sysdate，5）;
+从double选择add_months（sysdate，-5）;  - 如果第二个参数是负数，相应的是减少几个月
+    
+LAST_DAY一个月的最后一天
+从dual选择last_day（sysdate）;
+    
+MONTHS_BETWEEN计算相差的月数
+选择months_between（sysdate，to_date（'19981105'））from dual;  - 周强从出生到现在经历了多少个月。如果把两个参数换过来，得到的是相应的负数。
+select（sysdate  -  to_date（'19981105'））/ 30 from dual;  - 这样写是错误的，因为，一个月未必是30天
+    
+next_day计算日期之后的第一个相应工作日日期
+SELECT NEXT_DAY（sysdate，1）“NEXT DAY”从双;  - 如果是数字，那么只能是1-7。相应1表示星期日，2代表星期一...
+SELECT NEXT_DAY（to_date（'20111111'，'星期六'）“NEXT DAY”from dual;  - 第二个参数必须跟nls_date_language指定的字符集相关联
+    
+round（date）最接近的日期
+选择round（sysdate  -  200，'YEAR'）from dual;  - 跟现在最接近的年份
+选择round（sysdate，'MONTH'）from dual;  - 跟今天最接近的月份
+    
+trunc（date）截取日期
+SELECT TRUNC（TO_DATE（'2010-09-20'）''MONTH'）“新年”FROM DUAL;
+    
+dbtimezone显示时区
+EXTRACT（datetime）分解时间
+SELECT EXTRACT（year from systimestamp）“年”，
+  EXTRACT（month from systimestamp）“月”，
+  EXTRACT（day from systimestamp）“日” 来自双重;  -默认采取的是0时区，即unk时区的值。
+
+选择提取（小时从 时间戳 ' 1998-03-03 9:10:11 '）从双;  -返回的是9
+    
+比较函数
+
+GREATEST取最大值
+选择最大（2，3，4）从双重;  - 结果4
+    
+LEAST取最小值
+从双重选择最少（2,3,4） - 结果2
+    
+转换函数
+
+to_char
+至今
+to_number
+其他函数
+
+nvl（e1，e2）判定e1是否为空，如果为空那么替换为指定的e2。
+从double选择nvl（null，2）;
+从scott.emp e中选择e.ename，nvl（e.comm，0），其中comm为null;
+    
+nvl2（e1，e2，e3）
+选择e.ename，nvl2（e.comm，e.comm / 10，0）“佣金/ 10”来自scott.emp e;  - 三个参数。判定第一个是否为null，如果不是，返回第二个参数，如果是，返回第三个参数。
+    
+无效
+从双重选择nullif（100，50 * 2）n1，nullif（100，33 * 3）n2;
+    
+解释大家自我修炼，继续深入。因为它很强大，很厉害，很牛x。我们要掌握它，熟练使用它，让它成为我们的好朋友。
+从mates m中选择m.name，decode（m.sex，2，'男'，1，'女'，'未知'）
+    
+分组函数
+
+平均值
+最大
+和
+count（* | 1）
+从scott.emp中选择count（*）;
+从scott.emp中选择count（1）;
+从scott.emp中选择count（distinct deptno）;
+    
+分析函数
+
+row_number
+秩
+密集的
