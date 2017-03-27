@@ -1,0 +1,127 @@
+AOP
+
+AspectJ 是一个支持面向切面编程的包。除了 AspectJ，还有 Jboss AOP 和 Spring AOP。
+
+Spring AOP 的实现不够好，所以在 spring 中一般开启 AspectJ 的支持。
+
+Spring AOP 采用动态织入，AspectJ 采用静态织入。
+
+几个相关概念：
+
+Advice: 要向目标位置加入什么
+Pointcut: 要加到哪些位置
+Aspect: 一系列 Advice + Pointcut 的集合。
+Joinpoint: Pointcut 中的具体某个位置
+在 Spring 中使用 AspectJ:
+
+第一步，加入jar包：
+
+compile "org.aspectj:aspectjweaver:1.8.9
+第二步，在 spring.xml 中，增加 aspectj 的支持。
+
+<aop:aspectj-autoproxy proxy-target-class="true" />
+第三步，创建切面，放入容器。
+
+// 先定义一个日志相关的切面
+@Component
+@Aspect
+@Order(2)  // 如果定义了多个切面，由 order 来决定先后执行顺序，越小越靠前
+public class LogAspect {
+
+    // 定义 Pointcut，方便复用
+    @Pointcut("execution(* edu.nf.emptyproject.service.UserService(..))")
+    private void log1() {}
+
+    // 定义前置通知
+    @Before("execution(* edu.nf.emptyproject.service.UserService.*(..))")
+    public void sayHello() {
+        System.out.println("【AOP】 hello...");
+    }
+
+    // 定义后置通知
+    @After("execution(* edu.nf.emptyproject.service.UserService.find*(..))")
+    public void sayBye() {
+        System.out.println("【AOP】 Goodbye...");
+    }
+}
+
+
+// 定义一个计算运行时间的切面
+@Component
+@Aspect
+@Order(1)
+public class BenchmarkAspect {
+
+    @Around("execution(* edu.nf.emptyproject.service.UserService.*(..)))")
+    public Object doSomePrivsCheck(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        Object ret = joinPoint.proceed();
+        System.out.printf("【AOP】 执行方法 %s 一共用了 %d ms\n", joinPoint.getSignature().getName(), System.currentTimeMillis() - start);
+        return ret;
+    }
+
+}
+最后，来一发例子：
+
+main () {
+    ApplicationContext context = new ClassPathXmlApplicationContext("spring.xml");
+    UserService userService = context.getBean(UserService.class);
+    userService.sayHello();
+}
+上面是用注解的形式实现的切面。当然可以用 xml 的方式同样做到：
+
+<bean id="logAspect" class="edu.xxx.LogAspect" />
+
+<aop:config>
+  <aop:aspect ref="logAspect">
+    <aop:pointcut id="a" expression="execution(* edu..*.*(..))" />
+    <aop:before method="sayHello" pointcut-ref="a" />
+  </aop:aspect>
+</aop:config>
+Ok.
+
+注：AspectJ 表达式函数:
+
+函数	说明
+excution()	excution(* com.*.*(..)), 表示匹配 com 包下所有方法
+args()	arg(int, int), 表示匹配所有参数为int, int的方法
+within()	within(sss.*), 匹配sss包下所有的类下的所有方法
+target()	target(sss.Test), 匹配所有的类及其子类
+this()	this(sss.Test), 当前 AOP 对象实现了Test接口的所有方法
+@annotation()	@annotation(com.Test), 表示匹配所有标注了@Test的方法
+@args()	@arg(Test), 匹配参数注解为Test的方法
+@within()	@within(sss.Test), 匹配所有使用Test注解的类的所有方法
+@target	@target(sss.Test), 所有当前目标对象使用Test注解的类的所有方法
+声明式事务
+
+事务配置分为三个部分： DataSource + TransactionManager + Proxy。
+
+首先，在 spring.xml 中配置事务管理器(TransactionManager)：
+
+<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+  <property name="sessionFactory" ref="sessionFactory"/>
+</bean>
+然后，通过 xml 或 annotation 的方式配置事务：
+
+在 xml 中，用 aop 的方式配置:
+
+<!-- 使用事务管理器，生成事务的 advisor -->
+<tx:advice id="txAdvice" transaction-manager="transactionManager">
+  <tx:attributes>
+    <!-- 可以配置事务的属性 -->
+    <tx:method name="get*" read-only="true" />
+    <tx:method name="list*" read-only="true" />
+  </tx:attributes>
+</tx:advice>
+
+<!-- 为指定类的指定方法，织入事务代码 -->
+<aop:config>
+  <aop:pointcut id="services" expression="execution(* fish.miniblog.service.*.*(..))" />
+  <aop:advisor pointcut-ref="services" advice-ref="txAdvice" />
+</aop:config>
+使用 @Transactional 注解的方法:
+
+首先，在 spring.xml 中启用事务注解:
+
+<tx:annotation-driven transaction-manager="transactionManager" />
+然后，就可以肆无忌惮使用 @Transactional 注解了。
