@@ -1,0 +1,79 @@
+游标 (Cursor)
+
+游标是一种数据集合，可以类同于 java 里的 ResultSet，用于保存 SQL 查询的结果集。
+
+当查询一条语句时， Oracle 会打开一片工作区，把结果保存在里面，在这片工作区，存在一个指针，默认指向第一条记录。我们可以通过移动指针达到获取不同记录的目的。
+
+这个指针，就是游标。
+
+游标分为隐式游标和显式游标。
+
+隐式游标是 Oracle 自动管理的，比如我们进行一次 update，Oracle 会打开一个游标定位到数据，我们更新结束后，Oracle 就会把游标给关闭。
+
+显式游标，就是我们要自定义的游标，主要用来处理有多条数据返回的查询。下面是简单介绍。
+
+游标的使用分为下面几步：
+
+定义游标
+打开游标
+从当前位置获取数据
+循环直到读取结束
+关闭游标
+declare
+  cursor c_emp is select * from emp where deptno = 10;  -- 定义游标
+  v_emp emp%rowtype;
+begin
+  open c_emp;              -- 打开游标
+  fetch c_emp into v_emp;  -- 提取数据
+  loop
+    dbms_output.put_line(v_emp.ename || ' 工资 ' || v_emp.sal);
+    fetch c_emp into v_emp;
+    exit when c_emp%notfound;
+  end loop;
+  close c_emp;             -- 关闭游标
+end;
+/
+
+-- for 会自动打开关闭游标
+declare
+  cursor c_emp is select * from emp where deptno = 10;
+begin
+  for v_emp in c_emp loop
+    dbms_output.put_line(v_emp.name || ' 工资 ' || v_emp.sal);
+  end loop;
+end;
+/
+
+-- 再简单一点点
+BEGIN
+  for item in 
+  ( select last_name, job_id
+     from employees
+     where job_id like '%CLERK%'
+     and manager_id > 120 ) loop
+    dbms_output.put_line('name = ' || item.last_name || ', Job = ' || item.job_id);
+  end loop;
+END;
+/
+存储过程
+
+存储过程就是赋予名字的 PL/SQL 块。它可以实现复用的目的。
+
+跟函数类似，但存储过程没有 return 语句，它更专注于执行过程，而非返回结果。
+
+-- 简单栗子
+create or replace procedure demo_procedure (arg number)
+is
+  name varchar2(20) := 'Tom';
+begin
+  dbms_output.put_line(name || ' is ' || arg || ' years old now.');
+end;
+/
+
+-- 执行存储过程
+exec demo_procedure(9);
+-- or
+begin
+  demo_procedure(9);
+end;
+/
