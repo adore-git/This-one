@@ -1,0 +1,93 @@
+注册登录）
+
+业务分析
+
+我们需要以下四个请求：、
+
+第一个请求：
+显示登录的页面。 login.jsp
+第二个请求：
+点击登录之后，要完成登录的操作。 welcome.jsp fail.jsp
+第三个请求：
+显示注册的页面。 regist.jsp
+第四个请求：
+点击“注册”按钮之后，完成注册的操作。 login.jsp regerror.jsp
+
+建立动态web项目。
+打开 eclipse，选择 File -> New -> Dynamic Web Project(快捷键为Ctrl-N)。
+
+注意，工程名字尽量简洁，尽量用小写字母和_的组合。
+
+注意，在创建的工程的时候，将创建 web.xml 的选项勾上。 因为在 servlet3 版本中，可以不需要 web.xml 的情况下运行 web 工程，但是我们要使用 struts2，必须要在 web.xml 中进行若干的配置。
+
+将相关的 jar 包，复制到 工程目录/WebContent/WEB-INF/lib 文件夹下面。
+注意，一定不要缺少某些关键包，否则可能会报错。
+
+注意，如果出现一些莫名其妙的问题，包括像报 ClassNotFound 的异常，这时候，首先要检查是否有 jar 包的缺失。
+
+配置 web.xml，将所有的请求交给 struts 进行处理。
+即在 web.xml 中添加以下内容：
+
+<filter>
+    <filter-name>struts</filter-name>
+    <filter-class>org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter</filter-class>
+</filter>
+<filter-mapping>
+    <filter-name>struts</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+    
+注意： filter-name 是可以随意定义的，不过上下两个节点要填写一致，不要搞错。
+
+注意： 要确保 filter-class 的值写正确，这是一个确切存在的过滤器类。可以通过查看 struts2-core.jar 的源码去确定。
+
+注意： 在 elipse 左边的 Web App Libraries 下面，找到 struts2-core.jar，打开节点，直到 StrutsPrepareAndExecuteFilter，然后右键点击，选择 Copy Qualified Name，这样就把这个过滤器的完整路径复制下来了。然后就可以在 web.xml 中进行粘贴了。
+
+注意： 如果创建完工程之后，发现没有 web.xml，那么你需要自己创建或者从其他地方拷贝一个 web.xml 过来。但是一定不要放错位置（WebContent/WEB-INF/web.xml）。而且 xml 头部务必要写正确，格式也不能出现问题。
+
+注意： 以前的老旧 struts 版本中，使用的是过滤器 org.apache.struts2.dispatcher.FilterDispatcher。但现在已经被抛弃，不要使用，而是用 StrutsPrepareAndExecuteFilte 代替。同时，ActionContextClearUp 拦截器现在也被弃用。
+
+创建文件 struts.xml，配置所有模块和请求，即配置相应的 package 和 action。
+这是 struts 的配置中心，所有的 struts 属性配置和请求映射，都在这个文件夹中进行action设置。
+
+需要将这个文件放在 classpath 的根目录下面，即，src 目录下面。
+
+如果我们创建的工程能够运行起来不报错，但是我们的 action 请求返回404错误的话，首先需要检查我们的请求有没有写错，如果没有写错，那么，就要检查是不是我们的 struts.xml 放错了位置或写错了名字。
+
+如果我们的工程能够运行，但是在请求的时候，返回一些比如 result 没有正确映射等错误，那么，我们就需要检查是不是在 struts.xml 中配置错了东西。
+
+struts.xml，最好我们备份一份，在创建的时候，直接拷贝。因为，这个文件的格式，尤其是头部千万不能错误：
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+   <package></package>
+</struts>
+
+    
+头部的 dtd 文件可以在 struts2-core.jar 的根目录之下找到。里面可以拷贝到 DOCTYPE 的定义。
+
+注意， 一个请求对应一个 action 。这个概念务必要理解。另外，一个业务模块定义在一个 package 中，这个也要掌握。
+
+我们可以使用通配符来简化 action 配置。但务必不要滥用通配符，尤其刚开始的时候不建议过多使用通配符。
+
+实现相应的 action
+Action 类，是用来进行业务处理的类。它是一个 pojo (Plain Ordinary Java Object)，即一个普通的 java 类。它里面定义的方法如下格式:
+
+// 没有入参，返回 String 类型。返回值表示的是要返回给用户的页面，即 result
+public String execute () {
+	   System.out.println("这里是进行业务逻辑处理的地方。");
+  return "success";
+}
+    
+为了方便，绝大多数时候我们要为我们自己定义的 Action 继承 ActionSupport 类。ActionSupport 实现了一些接口，包含了一些有用的方法，可以简化我们的开发。
+
+实现相应的 jsp
+一些比较敏感的，尤其是涉及权限的东西，我们最好放在 WEB-INF 目录下面，因为按照 j2ee 的规范，WEB-INF 目录下的内容，不能够由外部直接访问，所以能够最大限度保证安全。
+
+以后在开发我们的业务系统的时候，避免直接访问 jsp 页面，养成习惯。
+
+另外，要养成把主要的业务操作方面的 jsp 放在 WEB-INF 下面的习惯
