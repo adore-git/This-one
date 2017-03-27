@@ -1,0 +1,79 @@
+使用资源文件，实现国际化。
+
+如果使用资源文件，只需要自定义我们自己的资源文件处理器，即实现 MessageSource 接口。
+
+但 spring 提供了一些实现好的处理器，我们只需要注册使用，比如，ReloadableResourceBundleMessageSource：
+
+<bean class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+  <!-- 指定我们的资源文件为class根目录下的 message.properties 文件 -->
+  <property name="basename" value="message" />
+</bean>
+在 message[.zh_CN].properties 里面定义 k/v 形式的信息。
+
+MY_NAME = GODMAN
+NAME.ERROR = 名字错误
+然后，就可以使用了。比如：
+
+<fmt:message key="MY_NAME" />
+再比如，在 JSR-303 验证里：
+
+@NotNull(message = "NAME.ERROR")
+在自定义验证器里:
+
+errors.rejectValue("name", "NAME.ERROR")
+就这样。。。简单。
+
+MultipartFile(文件的上传)
+
+SpringMVC 中，文件的上传，是通过 MultipartResolver 实现的。 所以，如果要实现文件的上传，只要在 spring-mvc.xml 中注册相应的 MultipartResolver 即可。
+
+MultipartResolver 的实现类有两个：
+
+CommonsMultipartResolver
+StandardServletMultipartResolver
+两个的区别：
+
+第一个需要使用 Apache 的 commons-fileupload 等 jar 包支持，但它能在比较旧的 servlet 版本中使用。
+第二个不需要第三方 jar 包支持，它使用 servlet 内置的上传功能，但是只能在 Servlet 3 以上的版本使用。
+以第二个为例，使用步骤：
+
+首先，在 web.xml 中为 DispatcherServlet 配置 Multipart：
+
+<servlet>
+  <servlet-name>mvc</servlet-name>
+  <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  <init-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>classpath:spring-mvc.xml</param-value>
+  </init-param>
+  <load-on-startup>1</load-on-startup>
+
+  <multipart-config>
+    <!-- 上传文件的大小限制，比如下面表示 5 M -->
+    <max-file-size>5242880</max-file-size>
+    <!-- 一次表单提交中文件的大小限制，必须下面代表 10 M -->
+    <max-request-size>10485760</max-request-size>
+    <!-- 多大的文件会被自动保存到硬盘上。0 代表所有 -->
+    <file-size-threshold>0</file-size-threshold>
+  </multipart-config>
+  
+</servlet>
+其次，在 spring-mvc.xml 中注册 MultipartResolver:
+
+<bean id="multipartResolver" class="org.springframework.web.multipart.support.StandardServletMultipartResolver" />
+然后，就可以使用了，比如，表单：
+
+<form:form action="/file/upload" enctype="multipart/form-data">
+  <input type="file" name="mfile" />
+  <input type="submit" value="上传图片" />
+</form:form>
+于是，就可以在 Controller 里这样处理了：
+
+@PostMapping("/upload")
+public String upload(MultipartFile mfile) throws Exception {
+    String savePath = ...;
+    if(!mfile.isEmpty()) {
+        mfile.transferTo(new File(savePath + mfile.getOriginalFilename()));
+    }
+    return "file/index";
+}
