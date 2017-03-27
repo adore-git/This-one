@@ -1,0 +1,41 @@
+Oracle 的 PL/SQL 运行分为编译，运行两个过程。 我们写在 PL/SQL 块中的 DDL/DML 语句在前期联编的过程中就被确定了，所以成为静态 SQL。 但是有些要执行的语句，在前期的联编过程中无法确定，只有到运行时才会确定。那么我们就需要用到动态 SQL。
+
+有两种方式处理动态 SQL：
+
+EXECUTE IMMEDIATE
+运用 Oracle 提供的 DBMS_SQL 包
+-- EXECUTE IMMEDIATE 基本语法
+EXECUTE IMMEDIATE 我们要执行的动态语句
+[INTO 要赋值的变量]
+[USING 需要绑定的值];
+
+
+-- 一个例子
+declare
+  sqlstr1 varchar2(88) := 'create table ssabc (a varchar2(20))';
+  sqlstr2 varchar2(88);
+  varstr varchar2(20) := 'hello';
+  varres varchar2(20);
+begin
+  -- 创建表的方式
+  execute immediate sqlstr1;
+
+  -- 插入第一条数据。oracle 通过两个''代表字符串里的一个'符号
+  sqlstr2 := 'insert into ssabc values (''world'')';
+  execute immediate sqlstr2;
+  commit;
+
+  -- 插入第二条数据
+  execute immediate ('insert into ssabc values (''' || varstr || ''')');
+  commit;
+
+  -- 插入第三条数据，其中 :1 是进行变量绑定的一种形式
+  execute immediate 'insert into ssabc values (:1)' using varstr;
+  commit;
+
+  -- 查询一条数据，利用 select into，对查询结果进行赋值
+  execute immediate 'select a from ssabc where rownum < 2' into varres;
+  dbms_output.put_line(varres);
+    
+end;
+/
