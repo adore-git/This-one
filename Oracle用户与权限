@@ -1,0 +1,184 @@
+用户
+
+用户是用于资源控制和权限管理的一个概念
+
+开始新的项目时，保持良好的习惯：为项目创建新的用户，指定新的表空间。
+
+系统缺省用户
+
+SYS用户，又叫特权用户，数据库中至高无上的用户。
+
+它是数据库的系统管理员，负责的是数据的安装，维护，升级，备份，恢复，优化等操作。
+不能用正常的身份登录，必须用SYSDBA / SYSOPER的身份登录。
+即使其他的用户用SYSDBA / SYSOPER的身份登录，实际上登录的也是SYS。
+SYSTEM用户。
+
+数据库的管理员.SYSTEM用户之下保存着数据库运行的一些基本字典数据。它拥有DBA的角色。主要负责对数据库中各种对象，各种资源的管理。
+
+其他用户（如SCOTT）
+
+普通用户，能够执行被授权范围之内的操作。
+
+用户的默认表空间
+
+SYS / SYSTEM - > SYSTEM表空间
+
+普通用户 - > USERS表空间
+
+资源文件（简介）
+
+资源文件是口令限制，资源限制的命名集合
+
+-查询
+select  * from dba_profiles where profile =  ' DEFAULT ' ;    -默认配置文件
+
+-创建 
+CREATE PROFILE filename LIMIT 
+  SESSION_PER_USER integer 
+  CPU_PER_SESSION integer 
+  USER_PER_CALL integer 
+  CONNECT_TIME integer | UNLIMITED
+
+- RESOURCE_LIMIT设置为TRUE，才会有效 
+alter system set RESOURCE_LIMIT = TRUE;
+-创建资源限制文件 
+创建配置文件myprofile limit failed_login_attempts 3 ;
+常用选项（我随便写的，你们自己再整理修订下）
+
+FAILED_LOGIN_ATTEMPTS	用于指定联系登陆的最大失败次数。
+PASSWORD_LOCK_TIME	用于指定帐户被锁定的天数。
+PASSWORD_LIFE_TIME	用于指定口令有效期
+PASSWORD_GRACE_TIME	用于指定口令宽限期。
+PASSWORD_REUSE_TIME	用于指定口令可用时间。
+PASSWORD_REUSE_MAX	用于指定口令在有效期内可更改次数。
+PASSWORD_VERIFY_FUNCTION	是否校验口令（校验将值改为VERIFY_FUNCTION）
+CPU_PER_SESSION	用于指定每个会话可以占用的最大CPU时间。
+LOGICAL_READS_PER_SESSON	用于指定会话的最大逻辑读取次数。
+PRIVATE_SGA	用于指定会话在共享池中可以分配的最大总计私有空间。
+COMPOSITE_LIMIT	用于指定会话的总计资源消耗
+CPU_PER_CALL	限制每次调用可占用的最大CPU时间
+LOGICAL_READS_PER_CALL	用于限制每次调用的最大逻辑I / O次数。
+SESSIONS_PER_USER	用于指定每个用户的最大并发会话个数。
+CONNECT_TIME	用于指定会话的最大连接时间。
+空闲时间	用于指定会话的最大空闲时间。
+创建/修改/删除用户
+
+创建用户语法格式
+创建用户名
+  通过密码识别
+  [默认表空间用户]
+  [临时表空间温度]
+  [个人资料默认]
+  [用户上的xxx]
+  [其他键/值对]
+    
+修改用户语法格式
+更改USER名称
+  通过密码识别
+  [默认表空间用户]
+  [临时表空间温度]
+  [个人资料默认]
+  [用户上的xxx]
+  [其他键/值对]
+    
+删除用户
+drop USER name [cascade]
+    
+操作示例
+-查询
+select  *  from dba_users where username = ' SCOTT ' ;
+
+-最基本的创建语法（用户名+密码）
+创建 用户 VIP通过VIP识别;
+
+-较详细的创建语法
+创建 用户 vip
+  由vip
+  默认表空间用户
+  临时临时温度
+  配置文件默认
+  配额ulimited 的用户;
+
+-修改用户
+更改  vop识别的用户 vip;
+alter  user vip profile ttt;
+alter  user vip default tablespace system;
+alter  user vip临时表空间mytemp;
+更改 用户 vip帐户解锁 /锁定;
+改变 用户 VIP配额无限上测试;  -非常好
+
+-删除用户如果用户下存在对象，需要添加级联关键词。
+拖放 用户 VIP;
+drop  用户 vip级联;
+
+    
+权限
+
+权限指的是执行特定命令或访问数据库对象的权利。分为系统权限和对象权限。
+
+系统权限（执行特定命令）
+
+授权语法
+
+授予用户名[用admin选项]
+with admin option参数可以使得到授权的用户有权把得到的权限授予其他用户。
+
+撤销语法
+
+从用户撤销权限名字
+相关的字典表
+
+select * from system_privilege_map;  - 所有的系统权限
+select * from dba_sys_privs where grantee ='SCOTT';  - 目前已经被授权的系统权限
+对象权限（访问数据库对象）
+
+授权语法
+
+授权对象权限的关键词（select / update / ..）on [schema。]对象名字给用户[有了选择];
+授予所有在scott.emp vip与授权选项;
+撤销权限
+
+从用户撤销权限名字
+相关的字典表
+
+select * from dba_tab_privs / all_tab_privs / user_tab_privs;  - 存放的是所有对象权限的授权情况。
+示例
+
+-授权
+授予创建表的贵宾;
+授予创建会话到vip [使用管理选项];
+grant  select，insert on  sys。dba_tab_privs to vip;
+授予所有在斯科特vip;           -授予所有
+
+授予创建同义词vip;         -可以为自己创建同义词
+grant创建任何同义词vip;     -可以为任意用户创建同义词
+grant创建公共同义词vip;  -可以创建公共同义词
+
+-撤权
+撤销创建表，从雨创建会话;
+从 vip撤销对 scott的更改;
+角色
+
+角色是权限的命名集合
+
+创建角色
+
+创建角色名称
+配置角色
+
+将权限名字授予角色名字
+授予角色名字到角色名字
+使用角色
+
+授予角色名字给用户名字
+删除角色
+
+drop ROLE角色名字
+相关的字典表
+
+选择* from dba_roles;  - 列出系统中所有存在的角色。
+select * from dba_sys_privs where grantee ='DBA';  - 查看DBA所拥有的所有系统权限
+select * from dba_role_privs where grantee ='SYSTEM' - 查看用户所拥有的所有角色
+特殊的PUBLIC角色
+
+公用角色，默认是授予每个用户的。
