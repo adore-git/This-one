@@ -1,0 +1,38 @@
+来一个在 SpringMVC 中通过 163 发送邮件的示例
+
+首先，增加 jar 包
+
+compile "org.springframework:spring-context-support:$springVersion"
+compile "javax.mail:mail:1.4.7"
+其次，在 spring.xml 中增加 mailSender 的配置：
+
+<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+  <property name="host" value="smtp.163.com" />
+  <property name="username" value="name" />
+  <property name="password" value="pass" />
+  <property name="javaMailProperties">
+    <props>
+      <prop key="mail.transport.protocol">smtp</prop>
+      <prop key="mail.smtp.auth">true</prop>
+      <prop key="mail.smtp.starttls.enable">true</prop>
+      <prop key="mail.debug">true</prop>
+    </props>
+  </property>
+</bean>
+最后，在代码中使用:
+
+@Service
+public class UserService {
+    
+    @Resource private MailSender mailSender;
+
+    public void sendMailDemo() {
+        SimpleMailMessage mailMsg = new SimpleMailMessage();
+        mailMsg.setFrom("xxx@163.com");   // 发件人
+        mailMsg.setTo("12345@qq.com");    // 收件人
+        mailMsg.setSubject("test");       // 邮件标题
+        mailMsg.setText("测试邮件");       // 发送内容
+
+        mailSender.send(mailMsg);         // 发送
+    }
+}
