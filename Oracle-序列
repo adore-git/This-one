@@ -1,0 +1,40 @@
+- SQLServer中自增字段的写法
+create  table  test（id int  primary key identity）;
+- MySQL中自增字段的写法
+创建 表 测试（id int  primary key auto_increment）;
+
+
+-创建一个序列语法
+CREATE SEQUENCE序列名字
+  [从数字开始]      -初始数字 
+  [minvalue数字]        -最小值 
+  [maxvalue数字]        -最大值 
+  [increment by数字]    -增量 
+  [cycle]                -是否要循环 
+  [cache数字]           -是否缓存，即是否在内存中预先分配接下来要用到的数字 
+  [order | nooreder]     -排序
+　
+
+-最基本的创建。默认从1开始，增量为1 
+创建 序列 seq_001 ;
+
+-开始
+数值表示初始，必须要大于等于minvalue -如果是nocycle模式，到达最大值继续执行会报错。否则，会循环
+-循环的起始数值是minvalue而不是开始的值。
+创建 序列 seq_006下手 3 MINVALUE - 6 MAXVALUE 8周期非缓存;
+
+-修改
+改变 顺序增加 8 ;
+将seq_006重命名为seq_666;
+
+-删除序列
+下拉 序列 seq_006;
+
+-序列的使用
+选择序列名字.nextval from dual;    -序列的下一个值，调用之后会自动增长，每次返回值不一定相同。
+选择序列名字.currval from dual;    -返回序列的当前值，每次调用返回值是一致的。需要序列被初始化（nextval）之后才能使用，否则报错。
+
+创建 表 seqtab（id 号 主键，名称varchar2（20））;
+插入 seqtab 值（seq_001。NEXTVAL，'你好'）; -这种写法虽然看起来麻烦，但是在开发中有其灵活性和通用性，是非常强大的。
+
+-自动插入，需要配合触发器（triggle）使用。有兴趣，有余力的同学，请自己关注。
