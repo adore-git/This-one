@@ -1,0 +1,98 @@
+常用的命令
+
+文档
+
+–help
+
+man(manual)
+
+info(information)
+
+ls(list)
+
+用来列出文件夹的内容
+
+passwd
+
+更改用户密码
+
+su
+
+切换到超级用户
+
+sudo
+
+临时切换到超级用户并做一些操作。操作完成之后返回原先用户的环境。
+
+gedit
+
+linux 之下存在的一个简单编辑器，类似于 windows 下面的 notepad
+
+sudo gedit /etc/apt/sources.list
+su
+vim /etc/apt/sources.list
+cp(copy)
+
+cp /etc/apt/sources.list ~/sources.list
+rm(remove)
+
+rm -rf / ttt  # 要不得
+mkdir/rmdir
+
+mkdir 是用来创建文件
+
+rmdir 默认只能删除空的文件夹，如果想要删除文件夹连带下面内容的话，那么用 rm -r dir 来表示。这是为了安全！
+
+cat/head/tail/more/less
+
+查看文件内容
+
+grep
+
+用来过滤内容，可以使用正则表达式。经常跟 “|” 通道结合使用。例如：
+
+ls /etc | grep "java"
+表示的是，显示 /etc 文件夹下名字中包含 “java” 字符串的文件夹
+
+find
+
+用来查找某个文件夹下面的内容。即搜索。
+
+比如，我们想查找 /etc 下面所有的 xml 文件，语法为:
+
+find /etc -type f -name "*.xml"
+其他内容，请自行 man
+
+tar/zip
+
+要想把一堆文件归档成一个单独的文件（方便管理），需要用到 tar 命令:
+
+tar -c -f xxx.tar a.txt b.txt c.txt
+tar -cf xxx.tar *.txt
+tar cf xxx.tar *.txt
+tar 命令，只是把分散的文件，拼接成一个完整的文件，但没有做任何的压缩处理。
+
+如果想压缩的话，就需要用到相关的压缩命令。拿 gzip 来示例：
+
+gzip xxx.tar
+如果，想一步到位，压缩加归档的话：
+
+tar --create --verbose --zip --file xxx.tar.gz a.txt b.txt c.txt
+tar czvf xxx.tar.gz *.txt
+如果想要解压的话：
+
+tar xzvf xxx.tar.gz
+任务相关
+
+将当前任务挂起，即放到后台
+
+Ctrl-Z
+命令行下，查看所有被挂起的后台任务
+
+jobs
+将挂起的某个任务，放置到前台
+
+fg [任务编号]
+将程序以后台的方式打开，只需要在命令最后添加
+
+&
