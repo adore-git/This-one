@@ -1,0 +1,201 @@
+apt-get update
+
+读取 sources.list 里面的地址，把所有可用软件的目录更新到本地
+
+apt-cache search
+
+从本地目录中，查询相关的软件。支持正则表达式。
+
+apt-get install
+
+讲软件下载到本地
+
+比如，下载 git
+
+apt-get update           # 在每次进行软件下载前，养成随手 update 的习惯
+apt-cache search "^git"  # 查询 git 软件
+apt-get install git      # 对 git 进行安装
+
+git clone https://github.com/s126/notes  # 克隆我们的笔记
+用户与权限
+
+文件的基本权限有:
+
+Read (读)
+Write (写)
+eXecute (执行)
+设置权限的层次：
+
+Owner (拥有者)
+Group (组)
+Others (其他人)
+chown
+
+更改文件的 Owner（所有者）或 Group（组）
+
+chown fish ~/abc.txt
+chown :fish_pool ~/abc.txt
+chgrp
+
+更改用户的组
+
+chgrp fish_pool ~/abc.txt
+groups
+
+创建一个组：
+
+groupadd fish_pool
+将用户 fish 和 vip 添加到组里面：
+
+gpasswd -a fish fish_pool
+gpasswd -a vip fish_pool
+将 vip 移除出去:
+
+gpasswd -d vip fish_pool
+显示当前用户所属的组（结果是一到多个）：
+
+groups
+chmod
+
+详细更改用户的权限
+
+第一种方式，通过 +/-/= 来添加权限
+
+# 创建一个文件
+echo "hello, world" >> ~/hello.txt
+
+# 如果让这个文件拥有读的权限
+chmod +r ~/hello.txt
+chmod -r ~/hello.txt
+
+chmod u+r ~/hello.txt  # 拥有者
+chmod g+r ~/hello.txt  # 组
+chmod o+r ~/hello.txt  # 其他
+chmod a+r ~/hello.txt  # 所有
+第二种方式，八进制。用数字去组合各种权限，r/w/x 分别用 4/2/1 来表示。
+
+chmod 777 ~/hello.txt
+chmod 644 ~/hello.txt
+JDK 的安装
+
+首先，选择。
+
+OpenJDK
+Oracle JDK
+安装 OpenJDK
+
+建议直接在 apt 里面安装
+
+首先，查询：
+
+apt-get update
+apt-cache search openjdk
+其次，安装
+
+apt-get install openjdk-7-jdk
+也可以下载其他相关的，比如，文档、示例
+
+apt-get install openjdk-7-doc
+apt-get install openjdk-7-demo
+当然，如果要卸载，需要:
+
+apt-get remove openjdk-7-jdk
+apt-get purge openjdk-7-jdk
+卸载可以跟一些选择，比如 –purge，表示清理。自己 help 详情。
+
+查看是否安装成功：
+
+java -version
+javac -version
+whereis java
+which java
+安装 OracleJDK
+
+总共分 2 步：
+
+第 0 步，下载
+
+注意，要下载跟自己的操作系统(Opertation System)相匹配的版本。
+
+查看操作系统信息，可以用 uname -a 命令。
+
+其中 x86 代表 32 位操作系统；x64 代表 64 位操作系统。
+
+第 1 步，解压到相应目录(opt)
+
+按照标准，建议，把所有第三方的，所有文件都在同一个文件夹内的软件，安装到 opt 目录。
+
+sudo tar xzf jdk-xxx.tar.gz -C /opt/jdk1.8
+第 2 步，设置环境变量
+
+在命令行下，首先，定义变量
+
+## 首先，设置 JAVA_HOME
+JAVA_HOME=/opt/jdk1.8
+export JAVA_HOME
+
+# 上面两句可以简写为
+export JAVA_HOME=/opt/jdk1.8
+
+
+## 如果，相要把 java 可执行文件的路径添加到 PATH
+export PATH=$JAVA_HOME/bin:$PATH
+上面再命令行下运行的命令，只能在当前 terminal 里有效。如果想永久设置，将这些设置放到 ~/.bashrc 或 ~/.profile 里面。
+
+但是，如果在系统中存在其他版本的 java， 你不想删除它，而且你想切换当前使用的版本为你刚安装的版本的话：
+
+第一种方式：更改 PATH 变量中，路径的先后顺序。
+
+第二种方式：利用 update-alternates 命令，设置执行程序的优先级。
+
+update-alternatives --install /usr/bin/java java /opt/jdk1.8/bin/java 1
+update-alternatives --install /usr/bin/javac javac /opt/jdk1.8/bin/javac 1
+update-alternatives --config java
+这样，就可以通过修改优先级，来切换不同的版本了。
+
+All In All
+
+# 下载
+wget [jdk 地址]
+
+# 解压
+sudo tar xzf jdk1.8.tar.gz -C /opt/
+
+# 设置 JAVA_HOME, "vi .bashrc"
+JAVA_HOME=/opt/jdk1.8.0_121
+PATH=$JAVA_HOME/bin:$PATH
+CLASSPATH=$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+Tomcat 的安装
+
+手动安装
+
+# 第 0 步：下载
+wget http://mirrors.hust.edu.cn/apache/tomcat/tomcat-7/v7.0.76/bin/apache-tomcat-7.0.76.tar.gz
+
+# 第 1 步：解压
+sudo tar xf apache-tomcat-7.0.76 -C /opt/
+
+# 第 2 步：配置环境变量
+echo "CATALINA_HOME=/opt/apache-tomcat-7.0.76" >> ~/.bashrc
+source ~/.bashrc
+
+# 第 3 步：启动
+sudo $CATALINA_HOME/bin/startup.sh
+apt 方式安装
+
+第一步，安装：
+
+sudo apt-get install tomcat7
+第二部，启动：
+
+service tomcat7 start
+service tomcat7 stop/restart/status
+
+# 作为一些新的系统，底层控制已换成 systemd，那么可以使用下面命令。跟上面等效:
+systemctl start/restart/stop/status tomcat7
+systemctl enable/disable tomcat7    # 设置是否开机启动
+第三步，安装其他：
+
+sudo apt-get install tomcat7-docs
+sudo apt-get install tomcat7-examples
+sudo apt-get isntall tomcat7-admin
