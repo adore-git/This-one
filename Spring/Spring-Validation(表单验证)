@@ -1,0 +1,127 @@
+三种方法：
+
+最基本的校验
+
+几个重要的概念
+
+一个接口 Errors/BindingResult，用来保存绑定错误信息。
+两个方法 errors.reject() / errors.rejectValue()，用来注册全局/字段级别的错误信息
+一个标签 <form:errors path=”*” />
+例子，首先，在页面上：
+
+<form:form action="/users/create" modelAttribute="user">
+  <ul class="errorTip">
+    <form:errors path="*" cssClass="error" element="li" />
+  </ul>
+  <div>
+    <form:input path="name" />
+    <form:errors path="name" cssClass="error" element="div" />
+  </div>
+  <div>
+    <form:input type="number" path="age" />
+    <form:errors path="age" cssClass="error" element="p" />
+  </div>
+  <input type="submit" value="注册" />
+</form:form>
+然后，可以在 Controller 中的 handler 里进行校验，添加错误信息
+
+@Controller
+@RequestMapping("/users")
+class UserController {
+
+    @RequestMapping("/create")
+    public String create(User user, Errors errors) {
+
+        // 校验名字
+        if(user.getName() == null || empty(user.getName())) {
+            errors.rejectValue("name", null, "名字不能为空");
+        }
+
+        // 校验年龄
+        if(user.getAge() < 18) {
+            errors.rejectValue("age", null, "年龄太小了，18R");
+        }
+
+        // 全局检验的例子
+        if(user.getName().equals("admin")) {
+            errors.reject(null, "你是谁？");
+        }
+
+
+        // 如果有校验错误，返回相应错误页面
+        if(errors.hasErrors())
+            return "regist";
+
+        // 如果没有错误，返回的页面
+        return "greeting";
+    }
+}
+这样，就可以了。这种方法是基于 handler 的，优点是定义方便，缺点是不便于复用。
+
+自定义验证器
+
+首先，自定义我们的验证器，只需要实现 Validator 接口即可。
+
+public class UserValidator implements Validator {
+
+    // 要来校验验证的类
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return clazz.equals(User.class);
+    }
+
+    // 写我们的校验逻辑，把相关错误注册到 errors 里面
+    @Override
+    public void validate(Object target, Errors errors) {
+        User user = (User) target;
+        if(user.getName() == null || user.getName().length() < 3) {
+            errors.rejectValue("name", null, "名字不能为空，而且必须要大于 3 位");
+        }
+
+        if(user.getAge() < 18 ) {
+            errors.rejectValue("age", null, "年龄必须要大于 18 岁哦");
+        }
+    }
+}
+其次，需要注册我们的验证器。
+
+可以注册到当前的 Controller 里面，
+
+// 放到 Controller 里面，这样会在 handler 执行之前被执行
+@InitBinder
+protected void init (DataBinder binder) {
+    binder.setValidator(new UserValidator());
+}
+也可以在 spring-mvc.xml 配置里注册成全局的验证器。
+
+<mvc:annotation-driven validator="userValidator" />
+<bean name="userValidator" class="fish.miniblog.validator.UserValidator" />
+最后，就可以在所需要验证的参数前面加上 @Validated 注解，来实现参数的自动校验了。
+
+JSR-303 风格校验
+
+JSR-303 是 java 官方推出的一套 Validation 接口。
+
+hibernate 给出了一个完整实现。
+
+首先，如果想使用 JSR-303 的校验风格，需要引入相应的包：
+
+complie "org.hibernate:hibernate-validator:5.4.0.Final"
+其次，添加我们的验证逻辑。需要在我们的 model bean 上添加相关注解：
+
+public class User {
+    @NotNull
+    @Size(min = 3, max = 10)
+    private String name;
+
+    @Range(min = 10, max = 100)
+    private int age;
+}
+再次，要保证在我们的 spring-mvc.xml 中存在:
+
+<mvc:annotation-driven />
+最后，使用，只要在 Controller 的相关字段上添加 @Valid 注解即可。
+
+public String create(@Valid User user, Errors errors) {
+    // 其他的使用跟上面是一致的.
+}
