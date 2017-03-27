@@ -1,0 +1,609 @@
+SQL的历史及概念
+
+SQL的分类
+
+DDL（数据定义语言）
+
+创建
+
+创建表的典型语句为：
+
+创建TABLE table_name
+（column_name column_type，[column_name column_type ...]）;
+例子：
+
+-最基本的创建
+创建 表 OrderTB（id号，名称 varchar2（ 20））;
+
+-添加主键
+创建 表 OrderTB（id号 主键，名称 varchar2（ 20））;
+创建 表 OrderTB  
+  （id号，
+   名称varchar2（20），
+    主键（id））;
+创建 表 OrderTB（id 号，名称varchar2（20），约束pk_ordertb 主键（id））;
+
+-添加外键，外键映射到的必须是主键
+create  table  sex（value primary key，detail varchar2（ 20））;
+创建 表 Mates（id号 主键，名称 varchar2（ 20），性别编号 引用 sex（value））;
+
+创建 表 配合  
+  （id 号 主键，
+   名称varchar2（20），
+   性爱数，
+    外键（性别）引用性别（值））;
+
+创建 表 配合  
+  （id 号 主键，
+   名称varchar2（20），
+   性爱号，
+   约束fk_mates 外键（性别）引用 sex（value））;
+
+-检查约束
+创建 表 类（id号，计数号 检查（count >  10  ， count <  100））;
+创建 表 Classes222 
+（id号 主键，
+  数数，
+  约束ck_classes 检查（count >  10  并计数<  100））;
+
+- TODO独特约束
+
+
+- 。双引号强制表名保留原来的大小写
+创建 表 “小明 ”（名称 VARCHAR2（ 20），年龄 INT）;
+
+
+-创建一张表，不生产重做日志的话
+创建 表 nologtab（id号）nologging;
+
+
+-创建一张表，指定另外的表空间
+create  table  spetab（id number）tablespace system;
+
+-强制字段内容不能为
+create  table  notnulltab（name varchar2（ 20） not null）;
+
+-指定某个字段的默认值
+create  table  tab_defaultval（name varchar2（ 20） not null，sex number default 1）;
+需要注意，首先，表的名字要符合一定的规范（长度，组成字符，保留字，以及其他）。
+
+Oracle会自动把表名转换为大写，但是如果想保留大小写的话，可以在创建表的时候，把表名用双引号括起来。
+
+主键：
+
+需要简短，效率，不重复，不可改变。所以，不要用业务字段作为主键，即使觉得业务字段是唯一且不可改变的。因为，你觉得不可改变的东西，往往经不住时间的考验自增的，简单的，跟业务没有关系的，所谓的代理主键，就比如sqlserver中的身份，MySQL中的auto_increment。
+
+查看数据库中表的DDL语句：
+
+设长999
+从双重选择DBMS_METADATA.get_ddl（'TABLE'，'EMP'）;
+从已经存在的表中，创建新的表
+
+-语法 
+create table table name as  select clause ...
+
+-简单应用
+创建 表 emp1  作为 select  *  from  scott。恩 ;
+
+-限定列
+创建 表 emp2  作为 select empno，ename，hiredate from  scott。恩 ;
+
+-限定列的过程中，可以使用运算符或函数
+创建 表 emp2  作为 select empno，ename，sal / 1000 s来自 scott。恩 ;
+
+-限定行（限定插入的数据）
+创建 表 emp3  作为 select empno，从 scott 命名。emp  ， empno <  7566 ;
+
+-如果只想复制表的结构的话
+创建 表 emp4  作为 select  *  从 scott。emp  其中 1 = 2 ;
+创建 表 emp4  作为 select  *  从 scott。emp  where rownum <  1 ;
+改变
+
+-最基本的用法
+alter  table表名操作关键词属性
+
+
+-添加一个列
+alter  table sss add howsoon number default 0 ;
+alter  table sss add（status char）;
+alter  table sss add（status char  not null）;         -可以添加其他的属性
+改变 表 SSS加载（状态炭默认 ' 1 '）;
+
+-添加一个主键约束
+alter  table sss add constraints pk_sss primary key（id）;
+
+-删除一个列
+alter  table sss drop COLUMN howsoon;
+
+-删除主键
+alter  table sss drop CONSTRAINTS pk_sss;
+
+-删除外键
+alter  table表名drop constraints外键名;
+
+-修改列
+alter  table sss modify（status varchar2（ 20） not null）;
+
+-更改列名
+alter  table sss重命名COLUMN status TO flag;
+
+
+-更改表的表空间
+alter  table sss move tablespace system;
+
+
+-更改是否记录日志
+alter  table sss logging;
+alter  table sss nologging;
+
+
+-如何去给一个表改名字
+ALTER  TABLE sss RENAME TO sss_new;
+将sss重命名为sss_new;
+
+下降
+
+滴桌表名
+滴桌表名级联约束;  - 注意，只是删除约束
+如果表存在被外键引用的情况的话，要删除有一下几种方式：
+
+删除外键引用的表
+删除外键引用表上存在的外键约束
+在删除的过程中加上关键字级联约束。
+DML（数据操作语言）
+
+概念，增加改查，又叫CRUD（创建/读/更新/删除）
+
+查询（选择）
+
+基本语法：
+
+从 [schema。]表名
+   中选择distinct字段名|表达式where子句
+   order by子句
+   group by clause
+   having子句;
+用法示例：
+
+-基本的查询
+select  *  from  scott。恩 ;   - *代表所有的列，但在生产环境中不建议使用。有时候会很低效。而且不便于解耦合。
+
+-基本的条件
+select  *  from  scott。emp  ，其中 empno <  7802 ;
+
+-排序
+select  *  from  scott。EMP  其中 EMPNO <  7902  为了通过 EMPNO;
+选择 *  从 斯科特。emp  其中 empno <  7902  order by empno desc ;   -降序
+select  *  from  scott。emp  其中 empno <  7902  按职位，empno;   -组合多个排序的列
+
+-不同的
+选择不同的工作从 emp;
+选择不同的工作，从 emp
+
+-别名
+select to_char（empno）作为 empnochar从 emp其中 sal >  5000 ;
+表的连接
+
+-交叉联接（叉乘，笛卡尔积）展示所有的记录的组合是内连接和外连接的基础。
+选择 *  从一个交叉联接 B;
+选择 *  从 a，b;
+
+-内连接（内连接）
+select  *  from a inner join b on  a。deptno  =  b。DEPTNO ;
+选择 a。恩， b。DEPTNAME  从一个内连接 b。使用（DEPTNO）;
+选择 a。恩， b。从 a，b的 deptname  其中b。deptno = a。DEPTNO ; - oracle中的写法 
+
+-外连接（外连接）
+选择 *  从一个左连接 b上 一个。deptno  =  b。DEPTNO ;
+选择 *  从一个左外连接 b。使用（DEPTNO）;
+选择 *  从一个右外连接 b上 一个。deptno  =  b。DEPTNO ;
+选择 *  从一个完整的加盟 b上 一个。deptno  =  b。DEPTNO ;   -全连接
+select  *  from a，b where  a。deptno = b。deptno（ +）;        -左外连
+select  *  from a，b where  a。deptno（ +） = b。DEPTNO ; -右连接 -左外连select * from a，b where a。deptno（ +） = b。DEPTNO ; -右连接 -左外连select * from a，b where a。deptno（ +） = b。DEPTNO ;        -右连接
+阶段性作业（scott用户下的表）
+
+查询每个部门下有多少员工
+查询除去salesman所有平均工资超过1500的部门
+查询在纽约工作的所有员工的姓名，部门名称和工资信息
+查询姓名为王的员工的编号，名称跟部门
+查询各种工作的最低工资
+查询工龄大于10年的所有员工信息
+查询每个部门员工数量，平均工资和平均工作年限
+统计各部门每个工种的人数，平均工资。
+查询从事同一部工作但不属于同一部门的员工信息。
+查询所有员工工资都大于1000的部门的信息和员工信息
+查询入职日期早于其直接上级的所有员工信息。
+列出雇员中（除去mgr为空的人）工资第二高的人。
+列出1981年来公司所有员工的总收入（包括sal和comm）
+通过...分组
+
+示例：
+
+选择 *  from emp group by deptno;    -因为用后，需要指定跟分组相关的列，字段。
+
+-查看每一组的数目
+select deptno， count（ *） from emp group by deptno;  -查看每一个部门有多少人
+
+-查询每个部门下有多少员工
+选择 d。dname， count（ *） from dept d，emp e 
+  其中 d。deptno  =  e。deptno  组由 d。DNAME ;
+选择 d。dname， e。c  
+  从部门d，
+       （select deptno，count（*）c from emp group by deptno）e
+  where  d。deptno  =  e。DEPTNO ;
+
+
+-分组的顺序是这样的：
+-首先，其中过滤原始数据; 
+-其次，依据组进行分组，得到跟分组数相同的记录数目; 
+-最后，用于groupby之后产生的结果再进行过滤。
+选择 GNO，
+    计数（ *）人数，
+    最大值（胭脂）最美，
+    分钟最有才，（胭脂）
+    平均（胭脂）平均，
+    总和（胭脂）总和
+  从 boysandgirls
+    其中名称 <>  '黄'
+    组由 GNO
+    具有 总和（胭脂） > 400 ;
+
+选择 *  从 
+  （选择 gno，
+       count（*）人数，
+       最大（yanzhi）最美，
+       最小（yanzhi）最有才，
+       平均（yanzhi）平均，
+       和（yanzhi）总和
+     来自 boysandgirls
+       ，其中 name <>  '黄'
+       group by gno ）a
+    ，总和> 400 ;
+
+-分组之后的表的连接
+select  *  from
+  团体a，
+  （选择 GNO，
+        计数（*）人数，
+        最大值（胭脂）最美，
+        分钟（胭脂）最有才，
+        平均（胭脂）平均，
+        总和（胭脂）总和
+      从 boysandgirls
+        其中名称<>  '黄'
+       组由 GNO
+        具有 总和（ yanzhi）> 400）b
+ 其中 a。gno  =  b。GNO ;
+
+-表的连接之后再分组
+选择 gname， sum（yanzhi） 
+  从伴侣a，组b 
+  其中 a。gno = b。GNO  和名称 <> '黄小波' 
+  按组的gname
+  具有 总和（一个。胭脂） > 350 ;
+
+插入（插入）
+
+最基本的语法
+
+insert into table_name [columns] values（value ...）;
+
+-示例表
+create  table  demo（id number，name varchar2（ 20））;
+
+-最简单插入
+插入演示值（ 1， '哈哈'）;
+插入 demo（id，name）值（ 2， ' hehe '）;
+插入 demo（id）值（ 3）;
+插入 demo（name，id）值（ ' heihei '， 4）;
+
+
+-注意，插入时，最好指定插入的字段因为可以提高效率，可以避免错误。
+改变 表演示中加入年龄数 ;      -对表进行扩充
+插入演示值（ 1， '哈哈'）;  -会出错，因为多了一列，但是插入的语法没有
+插入到 demo（name，id）值（ ' heihei '， 4）;  -没有问题。
+
+
+
+
+-从其他的中中加载数据
+insert into table_name select xxx from yyy;
+
+-复制scott.dept中的deptno> 20的所有数据到指定表
+从scott 创建 表 d  作为 select  * 。部门，其中1 = 2 ;  -按照之前学的语法，复制表的结构插入 dept select * from scott。部门其中 DEPTNO > 20 ;
+插入部门（选择* 从斯科特。部门其中 DEPTNO > 20）;   
+        
+
+
+-创建一张表，只有一个字段，varchar2（20）
+-把scott.dept中所有deptno> 20的部门的名称插入其中
+create  table  dept2（dname varchar2（ 20））;   -创建表的语句
+-下面三种是等价的
+insert into dept2从scott中选择 dname。部门其中 DEPTNO > 20 ;
+插入 dept2（dname）从scott中选择 dname。部门其中 DEPTNO > 20 ;
+插入 dept2值从scott中选择 dname。部门其中 DEPTNO > 20 ;
+-下面一种是错误的，因为在指定字段的时候，不能够跟踪值关键字一起使用insert into dept2（dname）value从scott中选择 dname。部门其中 DEPTNO > 20 ; - - -下面一种是错误的，因为在指定字段的时候，不能够跟踪值关键字一起使用insert into dept2（dname）value从scott中选择 dname。部门其中 DEPTNO > 20 ; - - -下面一种是错误的，因为在指定字段的时候，不能够跟踪值关键字一起使用insert into dept2（dname）value从scott中选择 dname。部门其中 DEPTNO > 20 ;  - -         
+   
+
+更新（更新）
+
+-基本语法
+UPDATE table_name SET column = value [，column = value ...] [ WHERE condition]
+
+-注意，一定不要缺少相应的其中，粗心大意是dba或者数据库操作员的天敌
+-其中条件，尽可能使用主键，因为主键是用来标识唯一一条记录的
+更新 dept set dname = '销售部“ ，其中的deptno =  30 ;
+
+删除（删除）
+
+-语法
+delete  from table_name [ where condition]
+
+ 从部门删除 ;   -删除表中所有记录
+从 dept 中删除 其中 dname = ' SALES ' ; -删除表中所有SALES的记录 
+
+- truncate语法，截断数据，会清空表中的所有数据
+-不需要提交事务，也不能够回滚。因为truncate不产生回滚段，不写redolog 
+-它删除的效率要高于delete从，但因为不能回滚，所以应用中应该慎之又慎。
+truncate table table_name;
+TCL（事务控制语言）
+
+控制数据的事务。事务就是把数据当做一个完整的操作单元，一起成功或者一起失败。这样才能保证数据的一致性。
+
+set transaction xxx配置事务属性
+设置事务只读/写 - 设置事务是否只读
+设置事务ISOLATION level read committed  - 设置事务的隔离属性
+    
+保存点保存点
+回滚到[savepint]回撤
+提交提交
+DCL（数据控制语言）
+
+授予
+撤消
+数据类型
+
+字符类型
+
+char类型（nchar）
+
+固定长度，默认是1，最大长度是2000个字节。不够的长度，oracle会用空格进行填充。
+
+创建表s1（c char（2001））;  - 错误，因为2001超出了类型的范围
+创建表s2（c char）;  - 默认char的长度为1。
+插入s2值（'a'）;  - 它是正确的。
+插入s2值（'你'）;  - 实际值：2，最大值：1）
+varchar类型
+
+是SQL的标准类型。不建议使用，用varchar2代替。因为varchar2有更高的效率和更好的兼容性。
+
+varchar2类型（nvarchar2）
+
+可变长度的最大长度为4000.效率不及固定长度的char类型。英文占用一个字节，中文占用多字节，所以，中文占用空间不一致nvarchar2，在varchar2基础上加入了字符集支持。
+
+nvarchar2中，长度表示的是字符个数。
+
+创建表演示（char（100），b varchar2（100），c nvarchar2（100））;
+插入演示值（'a'，'a'，'a'）;
+插入演示值（'你'，'你'，'你'）;
+从演示中选择长度b（a），长度b（b），长度b（c）
+创建表s4（c varchar2（4 char））;  -  char是代表字符个数，是一个单位符号。这个语句创建的表格，只有一个字段，是varchar2类型，可以填充4个字符（注意，不是字节）。
+创建表s4（c varchar2（4字节））;  - 是字符是跟上面语句一样的单位符号，代表的是字节。这是varchar2的默认单位。这个语句创建的表格，只有一个字段，是varchar2类型，可以填充4个字节（注意，不是字符）。
+长型
+
+用来存储大容量数据的，最大是2GB。已弃用，建议使用LOB字段代替。
+
+数字类型
+
+NUMBER类型
+
+定义语法为
+
+COLUMN号[（精度，刻度）]
+默认的长度是38。
+
+如果不带参数，精度和小数的位数是根据填充的数字自动判定的。
+
+创建表s5（c号）;
+如果scale为空，那么默认，scale为0.小数点后被截断的数位，采取的是四舍五入制。
+
+创建表s7（c号（5））;
+插入s7值（9.2222）;  - 插入的是9
+插入s7值（9.7777）;  - 插入的是10
+如果精度为空，那么，确定小数点位数为scale，precision自动判定。
+
+创建表s8（c号（*，2））;
+插入s8值（6.23236）;
+两个参数都具备的情况：
+
+创建表演示（一个数字（4，2））;
+插入演示值（987.1）;  - 值大于为此列指定的允许精度
+插入演示值（7.101）;  - 实际上插入的是7.10
+两个参数，第一个代表精度，第二个代表小数位数。
+
+INT / FLOAT子类型
+
+创建表s9（c int）;
+插入s9值（22.22）;
+时间类型
+
+DATE数据类型
+
+显示的是年月日
+
+-查看当天的日期
+从双重选择 sysdate  ;
+
+-修改当前日期显示的格式 
+alter session set nls_date_format = ' yyyy.mm.dd ' ;
+
+-应用示例
+创建 表 d1（出生日期）;
+插入到 d1值（ sysdate）;
+插入到 d1值（ sysdate  -  1）;             -可以进行简单运算，默认单位是“天” 
+插入 d1值（to_date（ ' 20120701 '））;     -用TO_DATE函数对字符串进行转换可以带两个参数，第一个是必须的如果第二个参数被忽略，那么预言会根据YYYY / MM / DD的顺序尝试对日期进行格式化。
+插入 d1值（to_date（ ' 2012/07/01 '））;
+
+
+插入 D1 值（TO_DATE（' 2012年7月1日'，' DD.MM.YYYY '））;   -两个参数都是字符串，需要用单引号引起来。
+
+创建 表 s1  值（birth varchar2（20））;
+插入到 s1 值（to_char（sysdate，' yyyy-mm-dd '））;        - to_char是把其他的类型转换为char类型
+
+
+TIMESTAMP数据类型
+
+-返回的是时区的时间类型，包含年月日时分秒微妙毫秒，上午下午，时区
+-在一般业务系统中，时间基本上用的都是时间戳类型
+-可以用nls_timestamp_format定制显示方式
+选择 systimestamp从双;
+RAW类型
+
+主要用途处理二进制的
+
+分为
+
+生的
+
+默认占用空间为2kb
+
+长RAW
+
+不建议使用，跟长类型有相同的缺点。
+
+LOB类型（大对象）
+
+CLOB类型
+
+是存储字符的大对象类型。
+
+创建表lobdemo1（c clob）;  - 创建一个具备blob字段的表
+插入到lobdemo1值（'ssss'）;
+插入到lobdemo1值（22222222222222222）;
+插入到lobdemo1值（null）;
+插入到lobdemo1值（empty_clob（））;  - 插入的不是空值
+BLOB类型
+
+是存储二进制数据的大对象类型。主要的用处是存储图形，音频，视频等。
+
+oracle提供了dbms_lob包，对lob字段进行操作。
+
+BFILE类型
+
+也是存储二进制。是以外部文件的形式进行存储的。
+
+XMLType类型
+
+主要是为了处理xml文档的。
+
+ROWID / ROWNUM
+
+rowid
+
+rowid是oracle中的伪列。可以通过下面语句显示：
+
+选择d.rowid，d。* from dept d
+它是唯一的，不可变的，固定长度的。
+
+它是数据存储物理地址的一种映射。一共有18位，前6位表示对象id，后3位表示fno，后6位表示块编号，最后3位表示行编号。所以，通过rowid可以最快速度地定位到数据所在的位置。
+
+rowid是oracle特有的。
+
+不建议使用rowid作为表的主键。迁移的需求，有改变的风险。
+
+rownum
+
+列出每一行数据的行数，从1开始，自然增长。
+
+-基本用法
+选择 rownum，d。*  从部门
+选择 rownum，d。*  从 dept d，其中 rownum <  3 ;     -显示前两条
+select  *  from（ select rownum rn，d。 *  from dept d）t where  t。rn  =  3 ;   -只显示第三条
+
+select  *  from（select  *  from emp order by sal desc）where rownum <= 3 ;  -显示emp表中工资前三位的雇员信息。
+
+空值
+
+它是Oracle中非常特殊的一种类型。它表示不确定，表示没有值。并且它们转化成所有的类型。向数据库中插入空字符串时，oracle会把它自动转化为null类型。在查询空字符的时候：
+
+从n3选择*，其中s ='';
+上面的语句是非法，不合适的。应该这样查：
+
+从n3中选择*，其中s为null;
+从n3中选择*，其中s不为空;
+创建表的时候，为了约束插入的数据不能为空，应该在字段的后面写上不为空约束。
+
+创建表n5（s varchar2（20）not null）;
+跟空做任何的运算，结果仍然是null。
+
+从双重选择null +“”
+运算符
+
+算术运算符
+
+加/减/乘/除
+
+连接运算符
+
+是用来连接字符串的。跟java中的+是一致的。
+
+选择'abc'|| 'bcd'as连接后的结果from dual;
+选择d.dname || “部门”
+关系运算符
+
+见课本
+
+比较运算符
+
+IS NULL / Like / Between / In / Exsist。
+
+-判断null值
+select  *  from n5其中 s为 null ;
+从 n5选择 *  ，其中 s不为空 ;
+
+-如模糊查询。慎用，有可能会导致全表扫描，效率低。
+从 dba_users中选择用户名，如“ VI_ ” ;
+从 dba_users中选择用户名，其中的用户名称为“ SC％” ;
+从 dba_users中选择用户名，其中用户名如“％SC％” ;   
+
+-在，是其中X = A或X = B或X = C的一种缩写下面两条是等价的。
+选择 *  从 EMP其中 EMPNO在（ 700， 800， 900）;
+select  *  from emp where empno =  700  或 empno =  800  或 empno =  900 ;
+-在后面跟的不一定是逗号分隔的单项，也可能是一个完整的查询语句
+-下面两条结果是一致的
+-这种在慎用
+select  *  from emp where deptno in（ select deptno from dept其中 dname =  ' SALES '）;
+选择 a。*  from emp a，dept d where  a。deptno  = d。deptno  和 d。dname = ' SALES ' ;
+
+
+-之间...并
+选择 *  从 EMP地方之间的empno 7800  和 9000 ;
+逻辑运算符
+
+和/或/不
+
+不优先级和优先级或优先级
+
+集合操作符
+
+联盟/联盟/相交/减号
+
+创建 表 depd  作为 select  *  from dept 其中 rownum <  2 ;
+插入 depd 值（99，'外卖部'，'珠海'）;
+插入 depd 值（98，'小吃部'，'斗门'）;
+
+ 从 dept中选择*  from depd
+ union 
+select  *  ;
+
+select  *  from depd
+ union all 
+select  *  from dept;
+
+选择 *  from depd
+相交
+选择 *  from dept;
+
+选择 *  from depd
+减去
+选择 *  from dept;
