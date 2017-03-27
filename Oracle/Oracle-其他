@@ -1,0 +1,36 @@
+导入导出
+
+这里只是简单栗子，更多选项请查阅资料
+
+# exp 命令用来导出数据
+# 显示帮助信息
+exp help=y
+
+# 举例：把 scott 和 vip 用户下的所有表都导出来，保存到 aaa 文件
+exp system/orcl file=D:\aaa.dmp owner=(scott,vip)
+
+# imp 命令用来导入数据
+# 举例，把 aaa 文件中的 scott 用户的表导入到 vip 用户中
+imp system/orcl file=D:\aaa.dmp fromuser=(scott) touser=(vip);
+
+
+生成批量数据
+
+-- 第一种，生成随机数，随机字符串
+create sequence shello;
+
+create table demo as
+ select 
+     shello.nextval id,
+     'SIT_' || dbms_random.string('l', 5) abc,
+     round(dbms_random.value(0, 100)) score
+   from dual connect by level <= 100000;
+
+-- 第二种，用已有的数据，例：
+begin
+  for i in 1..100 loop
+     -- 复制多份数据
+     insert into demo select xxx,yyy from dba_objects;
+  end loop;
+end;
+select row_number over (order by )
