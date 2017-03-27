@@ -1,0 +1,140 @@
+Oracle的体系结构
+  数据库是一个以某种有组织的方式存储的数据集合。它本质上是用计算机存储记录的系统，是位于用户和系统之间的一层管理软件。Oracle数据库是目前最流行，最强大的面向对象的关系型数据库（ORDBMS）。
+Oracle是基于请求响应的方式，分为服务端和客户端。
+服务端
+Oracle是由实例和数据库两部分组成的。
+
+实例（INSTANCE）
+又称为oracle数据库引擎，由内存即SGA（系统全局区，系统全局区）和后台处理进程组成。
+数据库（DATABASE）
+保存在计算机上的数据文件等。可以从物理物件或逻辑组件的角度看待。
+物理组件
+控制文件（控制文件）
+从v $ controlfile中选择*
+    
+记录数据库的物理结构和其他控制信息，如数据库名称，数据文件，日志文件名称和位置等。多副本保证安全。
+数据文件
+从v $ datafile中选择名称，状态，启用;
+    
+日志文件（归档日志文件）
+从v $ log中选择*  - 查看日志
+    
+保存用户的所有操作。一个数据库至少有两个日志组，轮流写入。
+每个日志组至少有一个日志成员，成员之间是镜像关系，这是为了保护数据。当一个组写完会自动切换下一组，也可以手动切换：
+alter system switch logfile  - 切换日志文件
+    
+如果打开归档模式，切换日志的时候会产生归档文件。打开归档模式命令：
+alter database archivelog
+    
+初始化参数文件（参数文件）
+$ ORA_HOME / admin / <SID> /pfile/init.ora.xxx
+    
+记录了数据库启动运行的一系列参数，内存，控制文件等
+逻辑组件
+表空间（tablespace）
+从v $ tablespace中选择*
+    
+最基本的逻辑结构，是数据库恢复的最小单位，容纳着许多数据库实体，如表，视图，索引，聚簇，回退段和临时段等。
+默认创建的表空间有SYSTEM / SYSAUX / TEMP / UNDO / USERS
+表空间跟数据文件是1vN的关系。一个表空间至少需要一个相应的数据文件
+在实际生产中，不建议用默认表空间，要根据情况自己创建
+创建/删除表空间的语法：
+-表空间创建
+create  tablespace  xxx
+  伐木
+  数据文件' D：\ X xx.dbf '
+  尺寸50m
+  自动扩上
+  下一个50m maxsize 20480m
+  局部管理;
+
+-创建临时表空间
+创建临时表空间yyy
+  临时文件' D：\ý yy.dbf ' ;
+
+-删除
+drop  table space yyy;
+        
+逻辑上说，一个表空间是由一到多个段组成的。
+段（段）
+段是对象在数据库中占用的空间
+每个段，对应的是每个对象，有table / index / view等
+按照存储对象类型的不同，分为数据段，索引段，回滚段和临时段
+逻辑上说，段是由区组成的
+区（延伸）
+由连续的数据块组成，由Oracle自动分配管理
+当段中的空间已满时，会自动扩展新区
+块（块）
+数据块是Oracle服务器所能分配，读取或写入的最小逻辑单位。
+Oracle服务器以数据块为单位管理数据文件的存储空间。
+正常情况下，块的大小是操作系统块的整数倍，称作标准块。
+可以通过参数db_block_size控制，默认8k。
+启动过程
+
+startup nomount  - 只启动了实例（Instance）
+alter database mount  - 数据库挂载
+alter database open  - 数据库打开
+立即关闭
+客户端
+
+sqlplus
+
+连接语法：
+
+sqlplus sys / southit as sysdba  - 管理员登录
+sqlplus / as sysdba  - 操作系统认证
+sqlplus scott / tiger  - 普通用户登录
+sqlplus scott / tiger @ remotedb  - 连接远程数据库
+sqlplus / nolog  - 未连接状态，之后可以用conn user / pass语法登录
+常用命令（set / show）
+
+linesize / pagesize / header / autocommit / echo / pause / serveroutput / autotrace / timing ...
+列xxx格式a22
+显示参数[系统参数]
+快速编辑之修改
+
+列表定位到需要修改的行
+通过改变去做替换
+change / table_names / table_name
+    
+通过列表命令，查看修改完的语句
+通过调用运行命令，运行目前缓存区存在的语句。
+快速编辑之追加单词
+
+列表定位到需要修改的行
+通过追加去追加字段
+附加table_name
+    
+通过列表做检查
+通过运行去执行命令。
+快速编辑之删除
+
+列表定位到需要修改的行
+列表1
+    
+通过del直接删除/通过change命令，把本行替换为空。
+列表查看结果
+运行运行语句
+快速编辑之添加新行
+
+列表定位
+通过输入输入新行的内容
+列表查看结果
+运行命令
+快速编辑之其他
+
+列表最后 - 定位到缓冲区内容的最后一行
+保存当前缓冲区的内容到.sql文件。默认为当前目录，可以添加详细路径
+start name.sql  - 加载.sql文件并执行。简写为@name
+get name  - 加载.sql文件但不执行
+run  - 执行缓冲区内容。简写为/
+编辑 - 调用外部编辑器修改缓冲区内容
+clear buffer  - 清空缓存区
+清屏 - 清屏
+jdbc
+
+利用java连接Oracle。需要ojdbc.jar
+
+其他的图形化工具
+
+Toad / PLSQL Developer等
