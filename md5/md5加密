@@ -1,0 +1,26 @@
+package edu.nf.text;
+
+import org.springframework.stereotype.Repository;
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+
+/**
+ * Created by Administrator on 2017/4/21.
+ */
+@Repository
+public class Jami {
+
+    /*
+    * md5加密
+    * */
+    public static String getDigestMD5(String email) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("md5");
+            md.update(email.getBytes());
+            return new BigInteger(1, md.digest()).toString(16);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+}
